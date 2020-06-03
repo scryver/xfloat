@@ -1,0 +1,3 @@
+[submodule "libberdip"]
+	path = libberdip
+	url = git@github.com:scryver/libberdip

@@ -1,4 +1,4 @@
-#include "../libberdip/platform.h"
+#include "../libberdip/src/platform.h"
 
 #include "xfloat.h"
 #include "xfloat.cpp"
