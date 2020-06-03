@@ -1,9 +1,10 @@
-#include "../libberdip/src/platform.h"
+#include "../libberdip/platform.h"
 
 #include "xfloat.h"
 #include "xfloat.cpp"
 #include "xfloat_constants_16.cpp"
 #include "xfloat_string.cpp"
+#include "xfloat_math.cpp"
 
 s32 main(s32 argc, char **argv)
 {
@@ -11,192 +12,194 @@ s32 main(s32 argc, char **argv)
     u32 a[16];
     u32 b[16];
     xf_clear(elemCount, a);
+    //xf_from_f64(elemCount, 2.5e-324, b);
+    //xf_from_f32(elemCount, 0.8e-45f, b);
     xf_from_f32(elemCount, 3.0f, b);
-    
+
     u8 aBuf[512];
     u8 bBuf[512];
     String aStr;
     String bStr;
-    
+
     fprintf(stdout, "Start:\n");
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "Added:\n");
     xf_add(elemCount, a, b, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "Multiply:\n");
     xf_multiply(elemCount, a, b, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "Subtract:\n");
     xf_subtract(elemCount, b, a, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "Divide:\n");
     xf_divide(elemCount, a, b, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "1/3:\n");
     xf_from_f32(elemCount, 3.0f, a);
     xf_from_f32(elemCount, 1.0f, b);
     xf_divide(elemCount, b, a, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "ans*3:\n");
     xf_from_f32(elemCount, 3.0f, b);
     xf_multiply(elemCount, a, b, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     fprintf(stdout, "1/(1/3):\n");
     xf_from_f32(elemCount, 3.0f, a);
     xf_from_f32(elemCount, 1.0f, b);
     xf_divide(elemCount, b, a, a);
     xf_divide(elemCount, b, a, a);
-    
+
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     bStr = string_from_xf(elemCount, b, U32_MAX, array_count(bBuf), bBuf);
     fprintf(stdout, "  A = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  B = %.*s\n", STR_FMT(bStr));
-    
+
     String tenth = static_string("0.1");
     xf_from_string(elemCount, tenth, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String hundreth = static_string("0.01");
     xf_from_string(elemCount, hundreth, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String hundMicroth = static_string("0.0001");
     xf_from_string(elemCount, hundMicroth, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String tenNanoth = static_string("0.00000001");
     xf_from_string(elemCount, tenNanoth, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String tenthNext = static_string("1e-16");
     xf_from_string(elemCount, tenthNext, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String one = static_string("1");
     xf_from_string(elemCount, one, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String ten = static_string("10");
     xf_from_string(elemCount, ten, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String hundred = static_string("100");
     xf_from_string(elemCount, hundred, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String tenThousand = static_string("10000");
     xf_from_string(elemCount, tenThousand, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     String tenNext = static_string("1.0E8");
     xf_from_string(elemCount, tenNext, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  X = %.*s\n", STR_FMT(aStr));
     fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X}\n", a[0], a[1], a[2], a[3], a[4]);
-    
+
     //
     // NOTE(michiel): TABLE GEN
     //
     u32 testNew[10] = {};
     u32 testNew2[10];
-    
+
     testNew[0] = XFLOAT_EXP_BIAS + 4;
     testNew[2] = 0xA0000000;
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E1 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     xf_copy(10, testNew, testNew2);
     xf_multiply(10, testNew, testNew2, testNew);
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E2 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     xf_copy(10, testNew, testNew2);
     xf_multiply(10, testNew, testNew2, testNew);
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E4 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     xf_copy(10, testNew, testNew2);
     xf_multiply(10, testNew, testNew2, testNew);
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E8 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     xf_copy(10, testNew, testNew2);
     xf_multiply(10, testNew, testNew2, testNew);
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E16 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     xf_copy(10, testNew, testNew2);
     xf_multiply(10, testNew, testNew2, testNew);
     aStr = string_from_xf(elemCount, testNew, U32_MAX, array_count(aBuf), aBuf);
     //fprintf(stdout, "  10E32 = %.*s\n", STR_FMT(aStr));
     //fprintf(stdout, "  {%08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X, %08X}\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
     fprintf(stdout, "    {0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X},\n", testNew[0], testNew[1], testNew[2], testNew[3], testNew[4], testNew[5], testNew[6], testNew[7], testNew[8], testNew[9]);
-    
+
     i_expect(elemCount == 16);
-    
+
     u32 pi[16];
     xf_from_string(elemCount,
                    static_string("3.14159265358979323846264338327950288419716939937510582097494459230781640"
@@ -243,113 +246,209 @@ s32 main(s32 argc, char **argv)
                                  "4942319615679452080951465502252316038819301420937621378559566389377870830"), pi);
     aStr = string_from_xf(elemCount, pi, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  PI   = %.*s\n", STR_FMT(aStr));
-    
+
     u32 zeros[16];
     xf_from_string(elemCount, static_string("0e12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0e+12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0e-12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0e-12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-0e-12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0.0E12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0.0E12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0.0E-12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0.0E+12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-0.0E-12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-0.0E+12"), zeros);
     aStr = string_from_xf(elemCount, zeros, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ZERO = %.*s\n", STR_FMT(aStr));
-    
+
     u32 ones[16];
     xf_from_string(elemCount, static_string("1"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("1.0"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("1.0e0"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0.000000000001e12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0.000000000001e+12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("1000000000000e-12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+1000000000000e-12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-1000000000000e-12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0.000000000001E12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0.000000000001E+12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+1000000000000.0E-12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("+0.000000000001E+12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-1000000000000.0E-12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("-0.000000000001E+12"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, " -ONE  = %.*s\n", STR_FMT(aStr));
-    
+
     xf_from_string(elemCount, static_string("0x0000.8p1"), ones);
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
-    
+
+#if 0
+    u32 floorTest[16];
+
+    u32 testFloors = 41;
+    f32 testFloorStart = -2.0f;
+    f32 testFloorEnd = 2.0f;
+
+    for (u32 testIdx = 0; testIdx < testFloors; ++testIdx)
+    {
+        f32 testF = map((f32)testIdx, 0, testFloors - 1, testFloorStart, testFloorEnd);
+        xf_from_f32(elemCount, testF, floorTest);
+        xf_floor(elemCount, floorTest, floorTest);
+        aStr = string_from_xf(elemCount, floorTest, 5, array_count(aBuf), aBuf);
+        fprintf(stdout, " FLOOR(% 5.2f) = %.*s\n", testF, STR_FMT(aStr));
+    }
+
+    for (u32 testIdx = 0; testIdx < testFloors; ++testIdx)
+    {
+        f32 testF = map((f32)testIdx, 0, testFloors - 1, testFloorStart, testFloorEnd);
+        xf_from_f32(elemCount, testF, floorTest);
+        xf_round(elemCount, floorTest, floorTest);
+        aStr = string_from_xf(elemCount, floorTest, 5, array_count(aBuf), aBuf);
+        fprintf(stdout, " ROUND(% 5.2f) = %.*s\n", testF, STR_FMT(aStr));
+    }
+#endif
+
+    u32 constOne[16];
+    u32 constTwo[16];
+    u32 constThree[16];
+    u32 constFour[16];
+    u32 constFive[16];
+    u32 constSix[16];
+    u32 constSeven[16];
+    u32 constEight[16];
+    u32 constNine[16];
+    u32 constTen[16];
+    u32 constEleven[16];
+    u32 summer[16];
+    xf_from_f32(elemCount, 1.0f, constOne);
+    xf_from_f32(elemCount, 2.0f, constTwo);
+    xf_from_f32(elemCount, 3.0f, constThree);
+    xf_from_f32(elemCount, 4.0f, constFour);
+    xf_from_f32(elemCount, 5.0f, constFive);
+    xf_from_f32(elemCount, 6.0f, constSix);
+    xf_from_f32(elemCount, 7.0f, constSeven);
+    xf_from_f32(elemCount, 8.0f, constEight);
+    xf_from_f32(elemCount, 9.0f, constNine);
+    xf_from_f32(elemCount, 10.0f, constTen);
+    xf_from_f32(elemCount, 11.0f, constEleven);
+
+    xf_add(elemCount, constOne, constTwo, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 2 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constThree, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 3 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constFour, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 4 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constFive, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 5 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constSix, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 6 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constSeven, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 7 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constEight, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 8 = %.*s (0x%08X)\n", STR_FMT(aStr), summer[0]);
+
+    xf_add(elemCount, constOne, constNine, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 9 = %.*s (0x%08X)\n", STR_FMT(aStr), summer[0]);
+
+    xf_add(elemCount, constOne, constTen, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 10 = %.*s\n", STR_FMT(aStr));
+
+    xf_add(elemCount, constOne, constEleven, summer);
+    aStr = string_from_xf(elemCount, summer, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  1 + 11 = %.*s\n", STR_FMT(aStr));
+
+    u32 sqrtTest[16];
+    xf_from_f32(elemCount, 1000.0f, sqrtTest);
+    xf_square_root(elemCount, sqrtTest, sqrtTest);
+    aStr = string_from_xf(elemCount, sqrtTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SQRT(3.0) = %.*s\n", STR_FMT(aStr));
+
     return 0;
 }
 

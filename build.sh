@@ -12,7 +12,7 @@ exceptions="-Wno-unused-function -Wno-writable-strings -Wno-gnu-zero-variadic-ma
 
 mkdir -p "$buildDir"
 
-echo Building "core-math"
+echo Building "xfloat"
 
 pushd "$buildDir" > /dev/null
     clang++ $flags $exceptions "$codeDir/xfloat_gen_constants.cpp" -o xfloat-const-gen

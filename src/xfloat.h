@@ -35,6 +35,7 @@ internal void   xf_divide(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);    // 
 internal s64    xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction); // NOTE(michiel): integer part returned, remaining fraction in fraction array
 internal s32    xf_compare(u32 elemCount, u32 *src1, u32 *src2);             // NOTE(michiel): {-1: src1 < src2, 0: src1 = src2, 1: src1 > src2}
 internal void   xf_from_f32(u32 elemCount, f32 f, u32 *x);
+internal void   xf_from_f64(u32 elemCount, f64 f, u32 *x);
 
 // NOTE(michiel): Use xfloat_string.cpp for these extra conversion functions (they need the constants file as well).
 //internal void   xf_from_string(u32 elemCount, String string, u32 *x);
