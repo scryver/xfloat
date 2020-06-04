@@ -229,7 +229,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
                             numberExponent = -numberExponent;
                         }
 
-                        u32 *p = &gXF_Tens[0][0];
+                        u32 *p = xf_get_power_of_ten(elemCount, 0); // &gXF_Tens[0][0];
                         exp = 1;
                         xf_copy(elemCount, gXF_One, accum);
                         accum[elemCount] = 0;
@@ -282,7 +282,7 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
     u32 sign = xf_get_sign(elemCount, xc);
     xf_make_positive(elemCount, xc);
     s32 exponent = 0;
-    u32 *ten = &gXF_Tens[0][0];
+    u32 *ten = xf_get_power_of_ten(elemCount, 0); // &gXF_Tens[0][0];
 
     s32 i = xf_compare(elemCount, gXF_One, xc);
     if (i != 0)
@@ -292,7 +292,7 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
             if (i < 0)
             {
                 s32 k = XFLOAT_MAX_NTEN;
-                u32 *p = &gXF_Tens[XFLOAT_NUMBER_TENS][0];
+                u32 *p = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
                 xf_copy(elemCount, gXF_One, accum);
                 xf_copy(elemCount, xc, xt);
                 while (xf_compare(elemCount, ten, xc) <= 0)
@@ -315,9 +315,9 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
             else
             {
                 s32 k = XFLOAT_MIN_NTEN;
-                u32 *p = &gXF_Tenths[XFLOAT_NUMBER_TENS][0];
-                u32 *r = &gXF_Tens[XFLOAT_NUMBER_TENS][0];
-                u32 *tenth = &gXF_Tenths[0][0];
+                u32 *p = xf_get_power_of_tenths(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tenths[XFLOAT_NUMBER_TENS][0];
+                u32 *r = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
+                u32 *tenth = xf_get_power_of_tenths(elemCount, 0); // &gXF_Tenths[0][0];
                 while (xf_compare(elemCount, tenth, xc) > 0)
                 {
                     if (xf_compare(elemCount, p, xc) >= 0)

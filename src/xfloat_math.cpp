@@ -114,6 +114,8 @@ xf_round(u32 elemCount, u32 *src, u32 *dst)
 }
 
 // TODO(michiel): Generate these
+// These are polynomial coefficients that approximate the square root function
+// in the range of [0.5, 1.0].
 global u32 gXF_SquareCoef2[16] = {
     XFLOAT_SIGN_MASK | (XFLOAT_EXP_BIAS - 2),
     0, 0xD14FC42F, 0xE79BA800, 0, 0
@@ -127,12 +129,6 @@ global u32 gXF_SquareCoef1[16] = {
 global u32 gXF_SquareCoef0[16] = {
     XFLOAT_EXP_BIAS - 1,
     0, 0xA08BDC7D, 0xD5FFE300, 0, 0
-};
-
-global u32 gXF_SquareRoot2[16] = {
-    XFLOAT_EXP_BIAS + 1,
-    0, 0xb504f333,0xf9de6484,0x597d89b3,0x754abe9f,0x1d6f60ba,
-    0x893ba84c,0xed17ac85,0x83339915,0x4afc8304,0x3ab8a2c3,0xa8b1fe70,
 };
 
 internal void
@@ -172,14 +168,14 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8)
 
             if (exponent & 0x1)
             {
-                xf_multiply(elemCount, gXF_SquareRoot2, accum2, accum2);
+                xf_multiply(elemCount, gXF_Sqrt2, accum2, accum2);
             }
 
             for (u32 index = 0; index < iterations; ++index)
             {
                 xf_divide(elemCount, src, accum2, accum1);
                 xf_add(elemCount, accum1, accum2, accum2);
-                xf_set_exponent(elemCount, accum2, xf_get_exponent(elemCount, accum2) - 1);
+                xf_naive_div2(elemCount, accum2);
             }
 
             xf_copy(elemCount, accum2, dst);
@@ -188,5 +184,184 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8)
         {
             xf_clear(elemCount, dst);
         }
+    }
+}
+
+internal void
+xf_sine(u32 elemCount, u32 *angle, u32 *dst)
+{
+    u32 accum1[elemCount];
+    u32 accum2[elemCount];
+    u32 accum3[elemCount];
+    u32 accum4[elemCount];
+
+    u32 sign = xf_get_sign(elemCount, angle);
+
+    xf_copy(elemCount, angle, accum4);
+    xf_make_positive(elemCount, accum4);
+    /* range reduction to [0, pi/2] */
+    xf_copy(elemCount, gXF_PiOver2, accum3);
+    xf_divide(elemCount, accum4, accum3, accum1);
+    xf_floor(elemCount, accum1, accum4);
+
+    /* accum2 = accum4 - 8 * floor(accum4/8) */
+    u32 exponentAccum4 = xf_get_exponent(elemCount, accum4);
+    if (exponentAccum4 >= 3)
+    {
+        xf_set_exponent(elemCount, accum4, exponentAccum4 - 3);
+        xf_floor(elemCount, accum4, accum2);
+        xf_set_exponent(elemCount, accum2, xf_get_exponent(elemCount, accum2) + 3);
+        xf_set_exponent(elemCount, accum4, exponentAccum4);
+    }
+    else
+    {
+        xf_clear(elemCount, accum2);
+    }
+
+    xf_subtract(elemCount, accum4, accum2, accum2);
+    s64 mod = xf_integer_fraction(elemCount, accum2, accum2);
+
+    xf_subtract(elemCount, accum1, accum4, accum2);
+    xf_multiply(elemCount, accum2, accum3, accum4);
+
+    mod &= 3;
+    if (mod > 1)
+    {
+        sign = XFLOAT_SIGN_MASK;
+    }
+    if (mod & 1)
+    {
+        xf_subtract(elemCount, accum3, accum4, accum4); /* accum4 = 1 - accum4 */
+    }
+
+    xf_multiply(elemCount, accum4, accum4, accum3);
+    xf_negate(elemCount, accum3);
+
+    xf_copy(elemCount, gXF_One, accum1);
+    xf_copy(elemCount, gXF_One, accum2);
+    xf_copy(elemCount, gXF_One, dst);
+
+    /* power series */
+    do
+    {
+        xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1      */
+        xf_divide(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
+        xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1 */
+        xf_divide(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
+        xf_multiply(elemCount, accum3, accum2, accum2); /* accum2 *= accum3 */
+        xf_add(elemCount, accum2, dst, dst);            /* dst += accum2 */
+    }
+    while((s32)(xf_get_exponent(elemCount, dst) - xf_get_exponent(elemCount, accum2)) < XFLOAT_MAX_BITS(elemCount));
+
+    xf_multiply(elemCount, accum4, dst, dst);
+
+    dst[XFLOAT_SIGN_EXP_IDX] &= ~XFLOAT_SIGN_MASK;
+    dst[XFLOAT_SIGN_EXP_IDX] |= sign;
+}
+
+internal void
+xf_cosine(u32 elemCount, u32 *angle, u32 *dst)
+{
+    u32 accum[elemCount];
+    xf_copy(elemCount, gXF_PiOver2, accum);
+    xf_subtract(elemCount, accum, angle, accum);
+    xf_sine(elemCount, accum, dst);
+}
+
+internal void
+xf_log(u32 elemCount, u32 *src, u32 *dst)
+{
+    u32 accumX[elemCount];
+    u32 accumZ[elemCount];
+    u32 accumA[elemCount];
+    u32 accumB[elemCount];
+    u32 accumT[elemCount];
+    u32 accumJ[elemCount];
+
+    if (!xf_get_sign(elemCount, src))
+    {
+        if (xf_get_exponent(elemCount, src))
+        {
+            /* range reduction: log x = log( 2**ex * m ) = ex * log2 + log m */
+            b32 foundAnswer = false;
+
+            xf_copy(elemCount, src, accumX);
+            s32 exponent = xf_get_exponent(elemCount, accumX);
+            if (exponent == XFLOAT_EXP_ONE)
+            {
+                // NOTE(michiel): Log 1 = 0
+                if (xf_compare(elemCount, src, gXF_One) == 0)
+                {
+                    xf_clear(elemCount, dst);
+                    foundAnswer = true;
+                }
+            }
+
+            if (!foundAnswer)
+            {
+                exponent -= XFLOAT_EXP_BIAS;
+                xf_set_exponent(elemCount, accumX, XFLOAT_EXP_BIAS);
+                /* Adjust range to 1/sqrt(2), sqrt(2) */
+                xf_naive_div2(elemCount, gXF_Sqrt2);
+                if (xf_compare(elemCount, accumX, gXF_Sqrt2) < 0)
+                {
+                    --exponent;
+                    xf_naive_mul2(elemCount, accumX);
+                }
+                xf_naive_mul2(elemCount, gXF_Sqrt2);
+
+                xf_add(elemCount, gXF_One, accumX, accumB);
+                xf_subtract(elemCount, accumX, gXF_One, accumA);
+                if (!xf_get_exponent(elemCount, accumA))
+                {
+                    xf_clear(elemCount, dst);
+                    foundAnswer = true;
+                }
+
+                if (!foundAnswer)
+                {
+                    xf_divide(elemCount, accumA, accumB, dst); /* store (src-1)/(src+1) in dst */
+
+                    xf_multiply(elemCount, dst, dst, accumZ);
+
+                    xf_copy(elemCount, gXF_One, accumA);
+                    xf_copy(elemCount, gXF_One, accumB);
+                    xf_copy(elemCount, gXF_One, accumJ);
+
+                    do
+                    {
+                        xf_add(elemCount, gXF_Two, accumJ, accumJ); /* 2 * i + 1 */
+                        xf_multiply(elemCount, accumZ, accumA, accumA);
+                        xf_divide(elemCount, accumA, accumJ, accumT);
+                        xf_add(elemCount, accumT, accumB, accumB);
+                    }
+                    while(((s32)xf_get_exponent(elemCount, accumB) - (s32)xf_get_exponent(elemCount, accumT)) < XFLOAT_MAX_BITS(elemCount));
+
+                    xf_multiply(elemCount, accumB, dst, dst);
+                    xf_naive_mul2(elemCount, dst);
+                }
+
+                /* now add log of 2**ex */
+                if (exponent != 0)
+                {
+                    xf_from_s32(elemCount, exponent, accumB);
+                    xf_multiply(elemCount, gXF_Log2Lower, accumB, accumT);
+                    xf_add(elemCount, accumT, dst, dst);
+                    xf_multiply(elemCount, gXF_Log2Upper, accumB, accumT);
+                    xf_add(elemCount, accumT, dst, dst);
+                }
+            }
+        }
+        else
+        {
+            // NOTE(michiel): Log of 0
+            xf_infinite(elemCount, dst);
+            xf_make_negative(elemCount, dst);
+        }
+    }
+    else
+    {
+        // NOTE(michiel): Domain error
+        xf_clear(elemCount, dst);
     }
 }

@@ -36,11 +36,23 @@ internal s64    xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction); // 
 internal s32    xf_compare(u32 elemCount, u32 *src1, u32 *src2);             // NOTE(michiel): {-1: src1 < src2, 0: src1 = src2, 1: src1 > src2}
 internal void   xf_from_f32(u32 elemCount, f32 f, u32 *x);
 internal void   xf_from_f64(u32 elemCount, f64 f, u32 *x);
+internal void   xf_from_s32(u32 elemCount, s32 s, u32 *x);
 
 // NOTE(michiel): Use xfloat_string.cpp for these extra conversion functions (they need the constants file as well).
 //internal void   xf_from_string(u32 elemCount, String string, u32 *x);
 //internal String string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data);
 //
+//
+//
+
+// NOTE(michiel): Use xfloat_math.cpp for these extra math functions (they need the constants file as well).
+// TODO(michiel): Maybe pass in a context with scratch space??
+//internal void   xf_floor(u32 elemCount, u32 *src, u32 *dst);
+//internal void   xf_round(u32 elemCount, u32 *src, u32 *dst);
+//internal void   xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8);
+//internal void   xf_sine(u32 elemCount, u32 *angle, u32 *dst);
+//internal void   xf_cosine(u32 elemCount, u32 *angle, u32 *dst);
+//internal void   xf_log(u32 elemCount, u32 *src, u32 *dst);
 //
 //
 
@@ -127,10 +139,10 @@ xf_copy_extend(u32 elemCount, u32 *src, u32 *dst)
 }
 
 internal void
-xf_infinite(u32 elemCount, u32 *src)
+xf_infinite(u32 elemCount, u32 *dst)
 {
-    xf_set_exponent(elemCount, src, XFLOAT_MAX_EXPONENT);
-    u32 *x = src + XFLOAT_MANTISSA_IDX;
+    xf_set_exponent(elemCount, dst, XFLOAT_MAX_EXPONENT);
+    u32 *x = dst + XFLOAT_MANTISSA_IDX;
     *x++ = 0;
     for (u32 index = 0; index < elemCount - XFLOAT_MANTISSA_IDX - 1; ++index)
     {
@@ -139,15 +151,29 @@ xf_infinite(u32 elemCount, u32 *src)
 }
 
 internal void
-xf_negate(u32 elemCount, u32 *src)
+xf_negate(u32 elemCount, u32 *x)
 {
-    xf_flip_sign(elemCount, src);
+    xf_flip_sign(elemCount, x);
 }
 
 internal void
-xf_absolute(u32 elemCount, u32 *src)
+xf_absolute(u32 elemCount, u32 *x)
 {
-    xf_make_positive(elemCount, src);
+    xf_make_positive(elemCount, x);
+}
+
+internal void
+xf_naive_div2(u32 elemCount, u32 *x)
+{
+    // NOTE(michiel): This is _not_ save for any value. The exponent is not checked!
+    xf_set_exponent(elemCount, x, xf_get_exponent(elemCount, x) - 1);
+}
+
+internal void
+xf_naive_mul2(u32 elemCount, u32 *x)
+{
+    // NOTE(michiel): This is _not_ save for any value. The exponent is not checked!
+    xf_set_exponent(elemCount, x, xf_get_exponent(elemCount, x) + 1);
 }
 
 

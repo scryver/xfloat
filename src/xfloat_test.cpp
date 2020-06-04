@@ -246,6 +246,7 @@ s32 main(s32 argc, char **argv)
                                  "4942319615679452080951465502252316038819301420937621378559566389377870830"), pi);
     aStr = string_from_xf(elemCount, pi, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  PI   = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "{0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X}\n", pi[0], pi[1], pi[2], pi[3], pi[4], pi[5], pi[6], pi[7], pi[8], pi[9], pi[10], pi[11], pi[12], pi[13], pi[14], pi[15]);
 
     u32 zeros[16];
     xf_from_string(elemCount, static_string("0e12"), zeros);
@@ -353,12 +354,12 @@ s32 main(s32 argc, char **argv)
     aStr = string_from_xf(elemCount, ones, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  ONE  = %.*s\n", STR_FMT(aStr));
 
-#if 0
+#if 1
     u32 floorTest[16];
 
-    u32 testFloors = 41;
-    f32 testFloorStart = -2.0f;
-    f32 testFloorEnd = 2.0f;
+    u32 testFloors = 40;
+    f32 testFloorStart = -100.0f;
+    f32 testFloorEnd = 100.0f;
 
     for (u32 testIdx = 0; testIdx < testFloors; ++testIdx)
     {
@@ -447,7 +448,106 @@ s32 main(s32 argc, char **argv)
     xf_from_f32(elemCount, 1000.0f, sqrtTest);
     xf_square_root(elemCount, sqrtTest, sqrtTest);
     aStr = string_from_xf(elemCount, sqrtTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SQRT(3.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SQRT(1000.0) = %.*s\n", STR_FMT(aStr));
+
+    u32 sineTest[16];
+    xf_from_f32(elemCount, 0.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(0.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 1.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(1.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 2.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(2.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 3.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(3.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 4.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(4.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 5.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(5.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 6.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(6.0) = %.*s\n", STR_FMT(aStr));
+    xf_from_f32(elemCount, 7.0f, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(7.0) = %.*s\n", STR_FMT(aStr));
+
+    xf_sine(elemCount, pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(PI) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constTwo, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(PI/2) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constFour, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(PI/4) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constEight, sineTest);
+    xf_sine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SINE(PI/8) = %.*s\n", STR_FMT(aStr));
+
+    xf_cosine(elemCount, pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  COSINE(PI) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constTwo, sineTest);
+    xf_cosine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  COSINE(PI/2) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constFour, sineTest);
+    xf_cosine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  COSINE(PI/4) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constEight, sineTest);
+    xf_cosine(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  COSINE(PI/8) = %.*s\n", STR_FMT(aStr));
+
+    u32 log2test[16];
+    xf_copy(3, gXF_Log2Upper, log2test);
+    xf_copy(13, &gXF_Log2Lower[2], &log2test[3]);
+    aStr = string_from_xf(elemCount, log2test, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  LOG2 = %.*s\n", STR_FMT(aStr));
+
+    xf_log(elemCount, gXF_Two, log2test);
+    aStr = string_from_xf(elemCount, log2test, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  LOG2 = %.*s\n", STR_FMT(aStr));
+
+    u32 logDivA[16];
+    u32 logDivB[16];
+    xf_log(elemCount, &gXF_Tens[1][0], logDivA);
+    xf_log(elemCount, &gXF_Tens[0][0], logDivB);
+    xf_divide(elemCount, logDivA, logDivB, logDivA);
+    aStr = string_from_xf(elemCount, logDivA, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  LOG(100)/LOG(10) = %.*s\n", STR_FMT(aStr));
+
+    aStr = string_from_xf(elemCount, gXF_SquareCoef2, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SquareCoef2 = %.*s\n", STR_FMT(aStr));
+    aStr = string_from_xf(elemCount, gXF_SquareCoef1, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SquareCoef1 = %.*s\n", STR_FMT(aStr));
+    aStr = string_from_xf(elemCount, gXF_SquareCoef0, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  SquareCoef0 = %.*s\n", STR_FMT(aStr));
 
     return 0;
 }

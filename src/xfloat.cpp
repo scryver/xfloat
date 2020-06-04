@@ -1354,3 +1354,70 @@ xf_from_f64(u32 elemCount, f64 f, u32 *x)
         }
     }
 }
+
+internal void
+xf_from_s32(u32 elemCount, s32 s, u32 *x)
+{
+    i_expect(elemCount > XFLOAT_MANTISSA_IDX + 1);
+
+    xf_clear(elemCount, x);
+
+    if (s)
+    {
+        if (s < 0)
+        {
+            xf_make_negative(elemCount, x);
+            s = -s; // NOTE(michiel): We account for overflow of the most negative number (this will stay the same)
+        }
+
+        BitScanResult highBit = find_most_significant_set_bit(s);
+        i_expect(highBit.found); // NOTE(michiel): Otherwise the check on s shouldn't be succesful
+
+        s32 shiftCount = 31 - highBit.index;
+
+        xf_set_exponent(elemCount, x, XFLOAT_EXP_ONE + highBit.index);
+        x[XFLOAT_MANTISSA_IDX + 1] = s << shiftCount;
+    }
+}
+
+#if 0
+// TODO(michiel): Check this, never ran, and still not sure how to attack the problem.
+internal void
+xf_from_s64(u32 elemCount, s64 s, u32 *x)
+{
+    i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
+
+    xf_clear(elemCount, x);
+
+    u64 mask = 0xFFFFFFFF00000000ULL;
+    if (((s & mask) == 0) ||
+        ((s & mask) == mask))
+    {
+        xf_from_s32(elemCount, s, x);
+    }
+    else
+    {
+        if (s < 0)
+        {
+            xf_make_negative(elemCount, x);
+            s = -s; // NOTE(michiel): We account for overflow of the most negative number (this will stay the same)
+        }
+
+        xf_set_exponent(elemCount, x, XFLOAT_EXP_ONE + 63);
+        x[XFLOAT_MANTISSA_IDX + 1] = (s >> 32) & U32_MAX;
+        x[XFLOAT_MANTISSA_IDX + 2] = s & U32_MAX;
+        s32 shiftCount;
+        xf_normalize_mantissa(elemCount, x, &shiftCount);
+        if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+        {
+            xf_clear(elemCount, x);
+        }
+        else
+        {
+            s64 exponent = (s64)xf_get_exponent(elemCount, x);
+            xf_set_exponent(elemCount, x, exponent - shiftCount);
+        }
+    }
+}
+#endif
+
