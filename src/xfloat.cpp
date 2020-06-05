@@ -1152,6 +1152,8 @@ xf_divide(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 internal s64
 xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction)
 {
+    // TODO(michiel): Make the integer part use all 64 bits!
+
     // NOTE(michiel): Returns the integer and puts the fraction in to _fraction_.
     u32 accum[elemCount + 1];
     s64 result = 0;
@@ -1380,7 +1382,6 @@ xf_from_s32(u32 elemCount, s32 s, u32 *x)
     }
 }
 
-#if 0
 // TODO(michiel): Check this, never ran, and still not sure how to attack the problem.
 internal void
 xf_from_s64(u32 elemCount, s64 s, u32 *x)
@@ -1389,11 +1390,11 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
 
     xf_clear(elemCount, x);
 
-    u64 mask = 0xFFFFFFFF00000000ULL;
-    if (((s & mask) == 0) ||
-        ((s & mask) == mask))
+    u32 *src = (u32 *)&s;
+    if (((src[1] == 0) && !(src[0] & XFLOAT_HIGH_BIT)) ||
+        ((src[1] == U32_MAX) && (src[0] & XFLOAT_HIGH_BIT)))
     {
-        xf_from_s32(elemCount, s, x);
+        xf_from_s32(elemCount, src[0], x);
     }
     else
     {
@@ -1404,8 +1405,9 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
         }
 
         xf_set_exponent(elemCount, x, XFLOAT_EXP_ONE + 63);
-        x[XFLOAT_MANTISSA_IDX + 1] = (s >> 32) & U32_MAX;
-        x[XFLOAT_MANTISSA_IDX + 2] = s & U32_MAX;
+        x[XFLOAT_MANTISSA_IDX + 1] = src[1];
+        x[XFLOAT_MANTISSA_IDX + 2] = src[0];
+
         s32 shiftCount;
         xf_normalize_mantissa(elemCount, x, &shiftCount);
         if (shiftCount > XFLOAT_MAX_BITS(elemCount))
@@ -1419,5 +1421,4 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
         }
     }
 }
-#endif
 

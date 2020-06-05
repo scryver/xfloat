@@ -1,3 +1,6 @@
+// TODO(michiel): Add return code to void functions, with over/underflow flags.
+// This will allow for checks on calculations if you want them.
+
 #ifndef XFLOAT_STICKY_BIT
 #define XFLOAT_STICKY_BIT    0
 #endif
@@ -5,6 +8,7 @@
 #define XFLOAT_SIGN_MASK     0x80000000
 #define XFLOAT_EXPONENT_MASK 0x7FFFFFFF
 #define XFLOAT_MAX_EXPONENT  0x00010000  // NOTE(michiel): Configurable up to (and including) 0x40000000
+#define XFLOAT_MAX_EXP_MASK  0x0000FFFF
 // TODO(michiel): Make it so that infinity is on MAX_EXPONENT - 1, that way we can take it up to 0x80000000
 #define XFLOAT_SIGN_EXP_IDX  0
 #define XFLOAT_MANTISSA_IDX  1 // NOTE(michiel): x[XFLOAT_MANTISSA_IDX] should always be 0 in normalized form
@@ -45,14 +49,7 @@ internal void   xf_from_s32(u32 elemCount, s32 s, u32 *x);
 //
 //
 
-// NOTE(michiel): Use xfloat_math.cpp for these extra math functions (they need the constants file as well).
-// TODO(michiel): Maybe pass in a context with scratch space??
-//internal void   xf_floor(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_round(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8);
-//internal void   xf_sine(u32 elemCount, u32 *angle, u32 *dst);
-//internal void   xf_cosine(u32 elemCount, u32 *angle, u32 *dst);
-//internal void   xf_log(u32 elemCount, u32 *src, u32 *dst);
+// NOTE(michiel): Use xfloat_math.cpp for extra math functions (they need the constants file as well).
 //
 //
 
