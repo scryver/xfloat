@@ -16,15 +16,16 @@ internal void   xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst);
 
 internal void   xf_sin(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_cos(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_tan(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_asin(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_acos(u32 elemCount, u32 *src, u32 *dst);
-//internal void   xf_atan(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_tan(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_asin(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_acos(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_atan(u32 elemCount, u32 *src, u32 *dst);
 // TODO(michiel): Or do we want to deviate the arguments and do a atan2(x, y) ??
-//internal void   xf_atan2(u32 elemCount, u32 *y, u32 *x, u32 *dst);
+internal void   xf_atan2(u32 elemCount, u32 *y, u32 *x, u32 *dst);
 
-internal void   xf_tanh(u32 elemCount, u32 *src, u32 *dst);
 //internal void   xf_sinh(u32 elemCount, u32 *src, u32 *dst);
 //internal void   xf_cosh(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_tanh(u32 elemCount, u32 *src, u32 *dst);
 //internal void   xf_asinh(u32 elemCount, u32 *src, u32 *dst);
 //internal void   xf_acosh(u32 elemCount, u32 *src, u32 *dst);
+//internal void   xf_atanh(u32 elemCount, u32 *src, u32 *dst);

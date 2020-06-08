@@ -27,6 +27,10 @@ global u32 *gXF_Zero;
 global u32 *gXF_One;
 global u32 *gXF_Half;
 global u32 *gXF_Two;
+global u32 *gXF_Three;
+global u32 *gXF_Four;
+global u32 *gXF_Five;
+global u32 *gXF_NegativeTwo;
 global u32 *gXF_Sqrt2;
 global u32 *gXF_Pi;
 global u32 *gXF_PiOver2;
@@ -35,6 +39,12 @@ global u32 *gXF_Log2;
 global u32 *gXF_Log10;
 global u32 *gXF_Log2e;
 global u32 *gXF_Log10e;
+
+global u32 *gXF_TanPiOver8;
+global u32 *gXF_Tan3PiOver8;
+
+global u32 *gXF_PiOver2Upper;
+global u32 *gXF_PiOver2Lower;
 
 global u32 *gXF_Log2Upper;
 global u32 *gXF_Log2Lower;
@@ -62,6 +72,7 @@ global u32 *gXF_SquareRootCoef2;
 #define generate_named_value(f, e, n, v)                   generate_named_value_(f, e, n, v, #v)
 #define generate_value_from_string(f, e, s, n, v)          generate_value_from_string_(f, e, s, n, v, #v)
 #define generate_upper_lower_from_string(f, e, s, n, u, l) generate_upper_lower_from_string_(f, e, s, n, u, l, #u, #l)
+#define generate_upper_lower_from_string_div2(f, e, s, n, u, l) generate_upper_lower_from_string_div2_(f, e, s, n, u, l, #u, #l)
 
 internal void
 generate_words_row(FILE *fileOutput, u32 elemCount, u32 *value)
@@ -103,6 +114,8 @@ generate_value_from_string_(FILE *fileOutput, u32 elemCount, String strValue, St
 internal void
 generate_upper_lower_from_string_(FILE *fileOutput, u32 elemCount, String constName, String name, u32 *upper, u32 *lower, char *upperName, char *lowerName)
 {
+    // TODO(michiel): Do a test with different precisions (one word, two words ore more extra)
+    // For example: 0.001 * lower + 0.001 * upper
     u32 total[elemCount + 1];
 
     xf_from_string(elemCount + 1, constName, total);
@@ -110,6 +123,34 @@ generate_upper_lower_from_string_(FILE *fileOutput, u32 elemCount, String constN
     {
         fprintf(stderr, "NOT ENOUGH DIGITS OF %.*s!!!\n", STR_FMT(name));
     }
+    upper[0] = total[0];
+    upper[2] = total[2];
+
+    lower[0] = total[0];
+    xf_set_exponent(elemCount, lower, xf_get_exponent(elemCount, lower) - 32);
+    copy((elemCount - 2) * sizeof(u32), total + 3, lower + 2);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s most-significant 32bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, upper, upperName);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s least-significant bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, lower, lowerName);
+}
+
+internal void
+generate_upper_lower_from_string_div2_(FILE *fileOutput, u32 elemCount, String constName, String name, u32 *upper, u32 *lower, char *upperName, char *lowerName)
+{
+    // TODO(michiel): Do a test with different precisions (one word, two words ore more extra)
+    // For example: 0.001 * lower + 0.001 * upper
+    u32 total[elemCount + 1];
+
+    xf_from_string(elemCount + 1, constName, total);
+    if (!total[elemCount])
+    {
+        fprintf(stderr, "NOT ENOUGH DIGITS OF %.*s!!!\n", STR_FMT(name));
+    }
+    xf_naive_div2(elemCount, total);
+
     upper[0] = total[0];
     upper[2] = total[2];
 
@@ -247,39 +288,73 @@ s32 main(s32 argc, char **argv)
     xf_naive_mul2(elemCount, gXF_Two);
     generate_named_value(fileOutput, elemCount, string("2.0e0"), gXF_Two);
 
+    // NOTE(michiel): Print 3.0
+    gXF_Three = allocate_array(u32, elemCount);
+    xf_add(elemCount, gXF_One, gXF_Two, gXF_Three);
+    generate_named_value(fileOutput, elemCount, string("3.0e0"), gXF_Three);
+
+    // NOTE(michiel): Print 4.0
+    gXF_Four = allocate_array(u32, elemCount);
+    xf_copy(elemCount, gXF_Two, gXF_Four);
+    xf_naive_mul2(elemCount, gXF_Four);
+    generate_named_value(fileOutput, elemCount, string("4.0e0"), gXF_Four);
+
+    // NOTE(michiel): Print 5.0
+    gXF_Five = allocate_array(u32, elemCount);
+    xf_add(elemCount, gXF_Four, gXF_One, gXF_Five);
+    generate_named_value(fileOutput, elemCount, string("5.0e0"), gXF_Five);
+
+    // NOTE(michiel): Print -2.0
+    gXF_NegativeTwo = allocate_array(u32, elemCount);
+    xf_copy(elemCount, gXF_Two, gXF_NegativeTwo);
+    xf_negate(elemCount, gXF_NegativeTwo);
+    generate_named_value(fileOutput, elemCount, string("-2.0e0"), gXF_NegativeTwo);
+
     fprintf(fileOutput, "\n");
 
     // NOTE(michiel): Constants from a string definition
 
     // NOTE(michiel): Print pi
     gXF_Pi = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gPiString, string("Pi"), gXF_Pi);
+    generate_value_from_string(fileOutput, elemCount, gPiString, string("pi"), gXF_Pi);
 
     // NOTE(michiel): Print pi/2
     gXF_PiOver2 = allocate_array(u32, elemCount);
     xf_copy(elemCount, gXF_Pi, gXF_PiOver2);
     xf_naive_div2(elemCount, gXF_PiOver2);
-    generate_named_value(fileOutput, elemCount, string("Pi / 2"), gXF_PiOver2);
+    generate_named_value(fileOutput, elemCount, string("pi/2"), gXF_PiOver2);
 
     // NOTE(michiel): Print sqrt(2)
     gXF_Sqrt2 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gSqrt2String, string("Sqrt(2)"), gXF_Sqrt2);
+    generate_value_from_string(fileOutput, elemCount, gSqrt2String, string("sqrt(2)"), gXF_Sqrt2);
 
     // NOTE(michiel): Print log(2)
     gXF_Log2 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog2String, string("Log(2)"), gXF_Log2);
+    generate_value_from_string(fileOutput, elemCount, gLog2String, string("log(2)"), gXF_Log2);
 
     // NOTE(michiel): Print log(10)
     gXF_Log10 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog10String, string("Log(10)"), gXF_Log10);
+    generate_value_from_string(fileOutput, elemCount, gLog10String, string("log(10)"), gXF_Log10);
 
     // NOTE(michiel): Print log2(e)
     gXF_Log2e = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog2eString, string("Log2(e)"), gXF_Log2e);
+    generate_value_from_string(fileOutput, elemCount, gLog2eString, string("log2(e)"), gXF_Log2e);
 
     // NOTE(michiel): Print log10(e)
     gXF_Log10e = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog10eString, string("Log10(e)"), gXF_Log10e);
+    generate_value_from_string(fileOutput, elemCount, gLog10eString, string("log10(e)"), gXF_Log10e);
+
+    // NOTE(michiel): Print tan(pi/8)
+    // TODO(michiel): Or should this come from a string as well?
+    // It should offer more precision as the minus one here will introduce a unknown bit at the lower end.
+    gXF_TanPiOver8 = allocate_array(u32, elemCount);
+    xf_subtract(elemCount, gXF_Sqrt2, gXF_One, gXF_TanPiOver8);
+    generate_named_value(fileOutput, elemCount, string("tan(pi/8) = sqrt(2) - 1"), gXF_TanPiOver8);
+
+    // NOTE(michiel): Print tan(3pi/8)
+    gXF_Tan3PiOver8 = allocate_array(u32, elemCount);
+    xf_add(elemCount, gXF_Sqrt2, gXF_One, gXF_Tan3PiOver8);
+    generate_named_value(fileOutput, elemCount, string("tan(3pi/8) = sqrt(2) + 1"), gXF_Tan3PiOver8);
 
     fprintf(fileOutput, "\n");
 
@@ -356,15 +431,18 @@ s32 main(s32 argc, char **argv)
         xf_multiply(elemCount + 1, tenA, tenB, tenA);
     }
 
+    gXF_PiOver2Upper = allocate_array(u32, elemCount);
+    gXF_PiOver2Lower = allocate_array(u32, elemCount);
     gXF_Log2Upper = allocate_array(u32, elemCount);
     gXF_Log2Lower = allocate_array(u32, elemCount);
     gXF_Log2eUpper = allocate_array(u32, elemCount);
     gXF_Log2eLower = allocate_array(u32, elemCount);
     gXF_Log10eUpper = allocate_array(u32, elemCount);
     gXF_Log10eLower = allocate_array(u32, elemCount);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog2String, string("Log(2)"), gXF_Log2Upper, gXF_Log2Lower);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog2eString, string("Log2(e)"), gXF_Log2eUpper, gXF_Log2eLower);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog10eString, string("Log10(e)"), gXF_Log10eUpper, gXF_Log10eLower);
+    generate_upper_lower_from_string_div2(fileOutput, elemCount, gPiString, string("pi/2"), gXF_PiOver2Upper, gXF_PiOver2Lower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog2String, string("log(2)"), gXF_Log2Upper, gXF_Log2Lower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog2eString, string("log2(e)"), gXF_Log2eUpper, gXF_Log2eLower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog10eString, string("log10(e)"), gXF_Log10eUpper, gXF_Log10eLower);
 
     fprintf(fileOutput, "\n");
     fclose(fileOutput);

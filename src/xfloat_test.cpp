@@ -486,75 +486,95 @@ s32 main(s32 argc, char **argv)
     xf_from_f32(elemCount, 0.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(0.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(0.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 1.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(1.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(1.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 2.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(2.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(2.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 3.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(3.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(3.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 4.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(4.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(4.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 5.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(5.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(5.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 6.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(6.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(6.0) = %.*s\n", STR_FMT(aStr));
     xf_from_f32(elemCount, 7.0f, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(7.0) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(7.0) = %.*s\n", STR_FMT(aStr));
 
     xf_sin(elemCount, pi, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(PI) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(PI) = %.*s\n", STR_FMT(aStr));
 
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constTwo, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(PI/2) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(PI/2) = %.*s\n", STR_FMT(aStr));
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constFour, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(PI/4) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(PI/4) = %.*s\n", STR_FMT(aStr));
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constEight, sineTest);
     xf_sin(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  SINE(PI/8) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  SIN(PI/8) = %.*s\n", STR_FMT(aStr));
 
     xf_cos(elemCount, pi, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  COSINE(PI) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  COS(PI) = %.*s\n", STR_FMT(aStr));
 
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constTwo, sineTest);
     xf_cos(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  COSINE(PI/2) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  COS(PI/2) = %.*s\n", STR_FMT(aStr));
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constFour, sineTest);
     xf_cos(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  COSINE(PI/4) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  COS(PI/4) = %.*s\n", STR_FMT(aStr));
     xf_copy(elemCount, pi, sineTest);
     xf_divide(elemCount, sineTest, constEight, sineTest);
     xf_cos(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  COSINE(PI/8) = %.*s\n", STR_FMT(aStr));
+    fprintf(stdout, "  COS(PI/8) = %.*s\n", STR_FMT(aStr));
+
+    xf_tan(elemCount, pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  TAN(PI) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constTwo, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  TAN(PI/2) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constFour, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  TAN(PI/4) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constEight, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  TAN(PI/8) = %.*s\n", STR_FMT(aStr));
 
     u32 log2test[16];
     xf_copy(3, gXF_Log2Upper, log2test);
@@ -619,6 +639,11 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "  1.5^-2.125 = %.*s\n", STR_FMT(aStr));
 
     xf_copy(elemCount, gXF_Half, a);
+    xf_exp10(elemCount, a, a);
+    aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  exp10(0.5) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Half, a);
     xf_exp2(elemCount, a, a);
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  exp2(0.5) = %.*s\n", STR_FMT(aStr));
@@ -628,10 +653,266 @@ s32 main(s32 argc, char **argv)
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  sqrt(2.0) = %.*s\n", STR_FMT(aStr));
 
-    xf_copy(elemCount, gXF_Half, a);
-    xf_exp10(elemCount, a, a);
-    aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
-    fprintf(stdout, "  exp10(0.5) = %.*s\n", STR_FMT(aStr));
+    xf_copy(elemCount, pi, sineTest);
+    xf_divide(elemCount, sineTest, constEight, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    xf_add(elemCount, gXF_One, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  tan(pi/8) = %.*s - 1.0E0\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Pi, sineTest);
+    xf_negate(elemCount, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(-pi) = %.*s\n", STR_FMT(aStr));
+
+    xf_clear(elemCount, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(0) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Pi, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(pi) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Pi, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(pi/2) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Pi, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(pi/4) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  tan(atan(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_tan(elemCount, sineTest, sineTest);
+    xf_atan(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan(tan(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, a);
+    xf_negate(elemCount, a);
+
+    xf_atan2(elemCount, gXF_Zero, gXF_Zero, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_Zero, gXF_One, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, gXF_One, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, gXF_Zero, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, a, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_Zero, a, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, a, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, gXF_Zero, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, gXF_One, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=1) = %.*s\n", STR_FMT(aStr));
+
+    // NOTE(michiel): Normalized
+    xf_atan2(elemCount, gXF_Zero, gXF_Zero, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_Zero, gXF_One, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, gXF_One, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, gXF_Zero, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_One, a, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=1, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, gXF_Zero, a, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=0, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, a, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, gXF_Zero, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=0) = %.*s\n", STR_FMT(aStr));
+
+    xf_atan2(elemCount, a, gXF_One, sineTest);
+    xf_divide(elemCount, sineTest, gXF_Pi, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  atan2(y=-1, x=1) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_negate(elemCount, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_clear(elemCount, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(0) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(1) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(1/2) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(1/4) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    xf_sin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sin(asin(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_sin(elemCount, sineTest, sineTest);
+    xf_asin(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  asin(sin(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_negate(elemCount, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(-1) = %.*s\n", STR_FMT(aStr));
+
+    xf_clear(elemCount, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(0) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(1) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(1/2) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(1/4) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    xf_cos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  cos(acos(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_cos(elemCount, sineTest, sineTest);
+    xf_acos(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  acos(cos(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Zero, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sinh(0) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sinh(1) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Half, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sinh(1/2) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Half, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sinh(1/4) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Half, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_naive_div2(elemCount, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sinh(1/8) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_asinh(elemCount, sineTest, sineTest);
+    xf_sinh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  sin(asinh(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_acosh(elemCount, sineTest, sineTest);
+    xf_cosh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  cos(acosh(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_One, sineTest);
+    xf_atanh(elemCount, sineTest, sineTest);
+    xf_tanh(elemCount, sineTest, sineTest);
+    aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  tan(atanh(1)) = %.*s\n", STR_FMT(aStr));
 
     return 0;
 }
