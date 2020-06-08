@@ -1422,3 +1422,14 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
     }
 }
 
+internal void
+xf_print_raw(u32 elemCount, u32 *x, b32 newLine /* = true */)
+{
+    for (u32 elemIdx = 0; elemIdx < elemCount; ++elemIdx)
+    {
+        fprintf(stdout, "%s%08X", elemIdx ? "" : "0x", x[elemIdx]);
+    }
+    if (newLine) {
+        fprintf(stdout, "\n");
+    }
+}

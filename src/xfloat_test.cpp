@@ -6,6 +6,7 @@
 #include "xfloat_constants_16.cpp"
 #include "xfloat_string.cpp"
 #include "xfloat_math.cpp"
+#include "xfloat_custom.cpp"
 
 s32 main(s32 argc, char **argv)
 {
@@ -913,6 +914,36 @@ s32 main(s32 argc, char **argv)
     xf_tanh(elemCount, sineTest, sineTest);
     aStr = string_from_xf(elemCount, sineTest, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  tan(atanh(1)) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Two, a);
+    xf_square_root(elemCount, a, a);
+    aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  osqrt(2.0) = %.*s\n", STR_FMT(aStr));
+
+    xf_copy(elemCount, gXF_Two, b);
+    xf_tst_square_root(elemCount, b, b);
+    aStr = string_from_xf(elemCount, b, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  nsqrt(2.0) = %.*s\n", STR_FMT(aStr));
+
+    xf_print_raw(elemCount, gXF_Sqrt2);
+    xf_print_raw(elemCount, a);
+    xf_print_raw(elemCount, b);
+
+    aStr = string_from_xf(elemCount, gXF_SquareRootCoef2, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  c2sqrt = %.*s\n", STR_FMT(aStr));
+    aStr = string_from_xf(elemCount, gXF_SquareRootCoef1, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  c1sqrt = %.*s\n", STR_FMT(aStr));
+    aStr = string_from_xf(elemCount, gXF_SquareRootCoef0, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  c0sqrt = %.*s\n", STR_FMT(aStr));
+
+    xf_multiply(elemCount, gXF_Pi, gXF_Pi, a);
+    xf_tst_square_root(elemCount, a, a, 5);
+    xf_subtract(elemCount, a, gXF_Pi, a);
+    xf_absolute(elemCount, a);
+    xf_divide(elemCount, a, gXF_Pi, a);
+    aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
+    fprintf(stdout, "  err sqrt(pi) = %.*s\n", STR_FMT(aStr));
+
 
     return 0;
 }

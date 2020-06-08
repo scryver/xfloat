@@ -218,14 +218,14 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
             u32 accum2[elemCount];
 
             xf_copy(elemCount, src, accum1);                                       // A = X
-            s32 exponent = (s32)xf_unbiased_exponent(elemCount, src);
+            s32 exponent = (s32)xf_unbiased_exponent(elemCount, src);              // E = EXPONENT(X)
             xf_set_exponent(elemCount, accum1, XFLOAT_EXP_BIAS);                   // A => RANGE (-1, 1)
 
             // NOTE(michiel): y = (x * coef2 + coef1) * x + coef0
-            xf_multiply(elemCount, gXF_SquareRootCoef2, accum1, accum2);           // B = A * C2
-            xf_add(elemCount, gXF_SquareRootCoef1, accum2, accum2);                // B += C1
-            xf_multiply(elemCount, accum1, accum2, accum2);                        // B *= A
-            xf_add(elemCount, gXF_SquareRootCoef0, accum2, accum2);                // B += C0
+            xf_multiply(elemCount, gXF_SquareRootCoef2, accum1, accum2);           // B = A * C2  | C2*X
+            xf_add(elemCount, gXF_SquareRootCoef1, accum2, accum2);                // B += C1     | C2*X + C1
+            xf_multiply(elemCount, accum1, accum2, accum2);                        // B *= A      | C2*X^2 + C1*X
+            xf_add(elemCount, gXF_SquareRootCoef0, accum2, accum2);                // B += C0     | C2*X^2 + C1*X + C0
 
             xf_set_exponent(elemCount, accum2, (exponent / 2) + XFLOAT_EXP_BIAS);  // B => RANGE(-SQRT(X), SQRT(X))
 
@@ -236,9 +236,10 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
 
             for (u32 index = 0; index < iterations; ++index)
             {
-                xf_divide(elemCount, src, accum2, accum1);                         // A = X / B
-                xf_add(elemCount, accum1, accum2, accum2);                         // B = A + B
-                xf_naive_div2(elemCount, accum2);                                  // B /= 2
+                // NOTE(michiel): X / ASQRT(X) should approach SQRT(X)
+                xf_divide(elemCount, src, accum2, accum1);                         // A = X / B    | X / ASQRT(X)
+                xf_add(elemCount, accum1, accum2, accum2);                         // B = A + B    | X / ASQRT(X) + ASQRT(X)
+                xf_naive_div2(elemCount, accum2);                                  // B /= 2       | (X / ASQRT(X) + ASQRT(X)) / 2
             }
 
             xf_copy(elemCount, accum2, dst);                                       // Y = B

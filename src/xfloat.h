@@ -31,6 +31,7 @@ internal void   xf_copy(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_infinite(u32 elemCount, u32 *src);
 internal void   xf_negate(u32 elemCount, u32 *src);
 internal void   xf_absolute(u32 elemCount, u32 *src);
+internal void   xf_max_value(u32 elemCount, u32 *src);
 
 internal void   xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 + src2
 internal void   xf_subtract(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);  // NOTE(michiel): dst = src1 - src2
@@ -41,6 +42,9 @@ internal s32    xf_compare(u32 elemCount, u32 *src1, u32 *src2);             // 
 internal void   xf_from_f32(u32 elemCount, f32 f, u32 *x);
 internal void   xf_from_f64(u32 elemCount, f64 f, u32 *x);
 internal void   xf_from_s32(u32 elemCount, s32 s, u32 *x);
+internal void   xf_from_s64(u32 elemCount, s64 s, u32 *x);
+internal void   xf_print_raw(u32 elemCount, u32 *x, b32 newLine = true);
+// TODO(michiel): xf_from_u32/u64
 
 // NOTE(michiel): Use xfloat_string.cpp for these extra conversion functions (they need the constants file as well).
 //internal void   xf_from_string(u32 elemCount, String string, u32 *x);
@@ -104,6 +108,7 @@ xf_get_exponent(u32 elemCount, u32 *x)
 internal s64
 xf_unbiased_exponent(u32 elemCount, u32 *x)
 {
+    // TODO(michiel): Make this return a s32 and fix up all code usage
     return (s64)xf_get_exponent(elemCount, x) - (s64)XFLOAT_EXP_BIAS;
 }
 
@@ -157,6 +162,19 @@ internal void
 xf_absolute(u32 elemCount, u32 *x)
 {
     xf_make_positive(elemCount, x);
+}
+
+internal void
+xf_max_value(u32 elemCount, u32 *x)
+{
+    xf_make_positive(elemCount, x);
+    xf_set_exponent(elemCount, x, XFLOAT_MAX_EXPONENT - 1);
+    u32 *d = x + XFLOAT_MANTISSA_IDX;
+    *d++ = 0;
+    for (u32 index = 0; index < (elemCount - XFLOAT_MANTISSA_IDX - 1); ++index)
+    {
+        *d++ = U32_MAX;
+    }
 }
 
 internal void

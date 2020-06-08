@@ -20,6 +20,7 @@ pushd "$buildDir" > /dev/null
     cp xfloat_constants_*.cpp "$codeDir/"
 
     clang++ $flags $exceptions "$codeDir/xfloat_test.cpp" -o xfloat-test
+    clang++ $flags $exceptions "$codeDir/xfloat_test_math.cpp" -o xfloat-math-test
     clang++ $flags $exceptions "$codeDir/float512_test.cpp" -o f512-test
 popd > /dev/null
 

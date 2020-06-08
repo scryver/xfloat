@@ -13,3 +13,44 @@ xf_random(RandomSeriesPCG *series, u32 elemCount, u32 *dst)
 
     dst[XFLOAT_MANTISSA_IDX + 1] |= XFLOAT_HIGH_BIT;
 }
+
+internal void
+xf_random_in_exp_range(RandomSeriesPCG *series, u32 elemCount, s32 minExp, s32 maxExp, u32 *dst)
+{
+    xf_random(series, elemCount, dst);
+    if (xf_unbiased_exponent(elemCount, dst) > maxExp)
+    {
+        xf_set_exponent(elemCount, dst, XFLOAT_EXP_BIAS + maxExp);
+    }
+    if (xf_unbiased_exponent(elemCount, dst) < minExp)
+    {
+        xf_set_exponent(elemCount, dst, XFLOAT_EXP_BIAS + minExp);
+    }
+}
+
+internal void
+xf_random_bilateral(RandomSeriesPCG *series, u32 elemCount, u32 *dst)
+{
+    xf_random(series, elemCount, dst);
+    u32 exponent = xf_get_exponent(elemCount, dst);
+    if (exponent > XFLOAT_EXP_BIAS)
+    {
+        xf_set_exponent(elemCount, dst, exponent - XFLOAT_EXP_BIAS);
+    }
+}
+
+internal void
+xf_random_unilateral(RandomSeriesPCG *series, u32 elemCount, u32 *dst)
+{
+    xf_random_bilateral(series, elemCount, dst);
+    xf_make_positive(elemCount, dst);
+}
+
+internal void
+xf_random_map(RandomSeriesPCG *series, u32 elemCount, u32 *offset, u32 *range, u32 *dst)
+{
+    // NOTE(michiel): dst = offset + range * random(0,1)
+    xf_random_unilateral(series, elemCount, dst);
+    xf_multiply(elemCount, dst, range, dst);
+    xf_add(elemCount, dst, offset, dst);
+}
