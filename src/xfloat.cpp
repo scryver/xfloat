@@ -251,7 +251,7 @@ xf_shift(u32 elemCount, u32 *x, s32 *shiftCount)
 //
 // NOTE(michiel): Core mantissa functions
 //   These (almost) all expect an extra word at the lowest precision, so be warned.
-//   For normal use see the xf_add, xf_subtract, xf_divide and xf_multiply implementations.
+//   For normal use see the xf_add, xf_sub, xf_div and xf_mul implementations.
 //
 
 internal void
@@ -976,6 +976,32 @@ xf_multiply_int(u32 elemCount, u32 *a, u32 *b, u32 *c)
 //
 
 internal void
+xf_minimum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+{
+    if (xf_compare(elemCount, src1, src2) < 0)
+    {
+        xf_copy(elemCount, src1, dst);
+    }
+    else
+    {
+        xf_copy(elemCount, src2, dst);
+    }
+}
+
+internal void
+xf_maximum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+{
+    if (xf_compare(elemCount, src1, src2) > 0)
+    {
+        xf_copy(elemCount, src1, dst);
+    }
+    else
+    {
+        xf_copy(elemCount, src2, dst);
+    }
+}
+
+internal void
 xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 + src2
@@ -983,14 +1009,14 @@ xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 }
 
 internal void
-xf_subtract(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+xf_sub(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 - src2
     xf_add_internal(elemCount, src1, src2, dst, true);
 }
 
 internal void
-xf_multiply(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 * src2
     i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
@@ -1095,7 +1121,7 @@ xf_multiply(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 }
 
 internal void
-xf_divide(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 / src2
     u32 accum[elemCount + 1];
@@ -1210,7 +1236,7 @@ xf_compare(u32 elemCount, u32 *src1, u32 *src2)
     if ((xf_get_exponent(elemCount, src1) <= (u32)XFLOAT_MAX_BITS(elemCount)) &&
         (xf_get_exponent(elemCount, src2) <= (u32)XFLOAT_MAX_BITS(elemCount)))
     {
-        xf_subtract(elemCount, src1, src2, r);
+        xf_sub(elemCount, src1, src2, r);
         if (xf_get_exponent(elemCount, r) == 0) {
             result = 0;
         } else if (xf_get_sign(elemCount, r) == 0) {

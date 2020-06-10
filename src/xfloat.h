@@ -28,15 +28,19 @@
 //
 internal void   xf_clear(u32 elemCount, u32 *x);
 internal void   xf_copy(u32 elemCount, u32 *src, u32 *dst);
-internal void   xf_infinite(u32 elemCount, u32 *src);
-internal void   xf_negate(u32 elemCount, u32 *src);
-internal void   xf_absolute(u32 elemCount, u32 *src);
-internal void   xf_max_value(u32 elemCount, u32 *src);
+internal void   xf_infinite(u32 elemCount, u32 *x);
+internal void   xf_negate(u32 elemCount, u32 *x);
+internal void   xf_absolute(u32 elemCount, u32 *x);
+internal void   xf_max_value(u32 elemCount, u32 *x);
 
+internal b32    xf_is_infinite(u32 elemCount, u32 *x);
+
+internal void   xf_minimum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);   // NOTE(michiel): dst = src1 < src2 ? src1 : src2
+internal void   xf_maximum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);   // NOTE(michiel): dst = src1 > src2 ? src1 : src2
 internal void   xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 + src2
-internal void   xf_subtract(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);  // NOTE(michiel): dst = src1 - src2
-internal void   xf_multiply(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);  // NOTE(michiel): dst = src1 * src2
-internal void   xf_divide(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);    // NOTE(michiel): dst = src1 / src2
+internal void   xf_sub(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 - src2
+internal void   xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 * src2
+internal void   xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 / src2
 internal s64    xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction); // NOTE(michiel): integer part returned, remaining fraction in fraction array
 internal s32    xf_compare(u32 elemCount, u32 *src1, u32 *src2);             // NOTE(michiel): {-1: src1 < src2, 0: src1 = src2, 1: src1 > src2}
 internal void   xf_from_f32(u32 elemCount, f32 f, u32 *x);
@@ -49,7 +53,7 @@ internal void   xf_print_raw(u32 elemCount, u32 *x, b32 newLine = true);
 // NOTE(michiel): Use xfloat_string.cpp for these extra conversion functions (they need the constants file as well).
 //internal void   xf_from_string(u32 elemCount, String string, u32 *x);
 //internal String string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data);
-//
+//internal void   xf_print(u32 elemCount, u32 *x, u32 digits)
 //
 //
 
@@ -115,6 +119,7 @@ xf_unbiased_exponent(u32 elemCount, u32 *x)
 internal void
 xf_set_exponent(u32 elemCount, u32 *x, u32 exponent)
 {
+    // TODO(michiel): Rename to biased exponent maybe
     x[XFLOAT_SIGN_EXP_IDX] &= ~XFLOAT_EXPONENT_MASK;
     x[XFLOAT_SIGN_EXP_IDX] |= (exponent & XFLOAT_EXPONENT_MASK);
 }
@@ -175,6 +180,13 @@ xf_max_value(u32 elemCount, u32 *x)
     {
         *d++ = U32_MAX;
     }
+}
+
+internal b32
+xf_is_infinite(u32 elemCount, u32 *x)
+{
+    b32 result = xf_get_exponent(elemCount, x) == XFLOAT_MAX_EXPONENT;
+    return result;
 }
 
 internal void

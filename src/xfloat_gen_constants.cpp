@@ -195,7 +195,7 @@ s32 main(s32 argc, char **argv)
     while ((prevExp <= nextExp) && (nextExp < XFLOAT_MAX_EXPONENT))
     {
         ++genTens;
-        xf_multiply(elemCount, tenA, tenB, tenA);
+        xf_mul(elemCount, tenA, tenB, tenA);
         xf_copy(elemCount, tenA, tenB);
         prevExp = nextExp;
         nextExp = xf_get_exponent(elemCount, tenA);
@@ -224,7 +224,7 @@ s32 main(s32 argc, char **argv)
 
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
-        xf_multiply(elemCount, tenA, tenB, tenA);
+        xf_mul(elemCount, tenA, tenB, tenA);
         xf_copy(elemCount, tenA, xf_get_power_of_ten(elemCount, tenIdx));
 
         fprintf(fileOutput, "    // NOTE(generator) 10^%u\n    {", 1 << (tenIdx));
@@ -245,7 +245,7 @@ s32 main(s32 argc, char **argv)
 
     gXF_Tenths = allocate_array(u32, genTens * elemCount);
     fprintf(fileOutput, "global u32 gXF_Tenths[%u][%u] = {\n", genTens, elemCount);
-    xf_divide(elemCount, tenB, tenA, tenA);
+    xf_div(elemCount, tenB, tenA, tenA);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
         xf_copy(elemCount, tenA, xf_get_power_of_tenths(elemCount, tenIdx));
@@ -254,7 +254,7 @@ s32 main(s32 argc, char **argv)
         generate_words_row(fileOutput, elemCount, tenA);
         fprintf(fileOutput, "},\n");
         xf_copy(elemCount, tenA, tenB);
-        xf_multiply(elemCount, tenA, tenB, tenA);
+        xf_mul(elemCount, tenA, tenB, tenA);
     }
     fprintf(fileOutput, "};\n\n");
 
@@ -348,7 +348,7 @@ s32 main(s32 argc, char **argv)
     // TODO(michiel): Or should this come from a string as well?
     // It should offer more precision as the minus one here will introduce a unknown bit at the lower end.
     gXF_TanPiOver8 = allocate_array(u32, elemCount);
-    xf_subtract(elemCount, gXF_Sqrt2, gXF_One, gXF_TanPiOver8);
+    xf_sub(elemCount, gXF_Sqrt2, gXF_One, gXF_TanPiOver8);
     generate_named_value(fileOutput, elemCount, string("tan(pi/8) = sqrt(2) - 1"), gXF_TanPiOver8);
 
     // NOTE(michiel): Print tan(3pi/8)
@@ -409,7 +409,7 @@ s32 main(s32 argc, char **argv)
     gXF_Tens = allocate_array(u32, genTens * (elemCount + 1));
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
-        xf_multiply(elemCount + 1, tenA, tenB, tenA);
+        xf_mul(elemCount + 1, tenA, tenB, tenA);
         xf_copy(elemCount + 1, tenA, xf_get_power_of_ten(elemCount + 1, tenIdx));
         xf_copy(elemCount + 1, tenA, tenB);
     }
@@ -423,12 +423,12 @@ s32 main(s32 argc, char **argv)
 
     deallocate(gXF_Tenths);
     gXF_Tenths = allocate_array(u32, genTens * (elemCount + 1));
-    xf_divide(elemCount + 1, tenB, tenA, tenA);
+    xf_div(elemCount + 1, tenB, tenA, tenA);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
         xf_copy(elemCount + 1, tenA, xf_get_power_of_tenths(elemCount + 1, tenIdx));
         xf_copy(elemCount + 1, tenA, tenB);
-        xf_multiply(elemCount + 1, tenA, tenB, tenA);
+        xf_mul(elemCount + 1, tenA, tenB, tenA);
     }
 
     gXF_PiOver2Upper = allocate_array(u32, elemCount);

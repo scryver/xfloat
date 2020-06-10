@@ -51,6 +51,18 @@ xf_random_map(RandomSeriesPCG *series, u32 elemCount, u32 *offset, u32 *range, u
 {
     // NOTE(michiel): dst = offset + range * random(0,1)
     xf_random_unilateral(series, elemCount, dst);
-    xf_multiply(elemCount, dst, range, dst);
+    xf_mul(elemCount, dst, range, dst);
     xf_add(elemCount, dst, offset, dst);
+}
+
+internal void
+xf_random_log(RandomSeriesPCG *series, u32 elemCount, u32 *x, u32 *dst)
+{
+    // NOTE(michiel): range from 1 to exp(x)
+    // So you can use A * xf_random_log(log(B/A)) which is logarithmically distributed
+    // over (A, B)
+
+    xf_random_unilateral(series, elemCount, dst);
+    xf_mul(elemCount, x, dst, dst);
+    xf_exp(elemCount, dst, dst);
 }

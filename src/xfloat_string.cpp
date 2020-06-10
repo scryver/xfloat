@@ -237,7 +237,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
                         do
                         {
                             if (exp & numberExponent) {
-                                xf_multiply(elemCount, p, accum, accum);
+                                xf_mul(elemCount, p, accum, accum);
                             }
                             exp <<= 1;
                             p += elemCount;
@@ -245,9 +245,9 @@ xf_from_string(u32 elemCount, String string, u32 *x)
                         while (exp <= XFLOAT_MAX_NTEN);
 
                         if (esign < 0) {
-                            xf_divide(elemCount, tempX, accum, x);
+                            xf_div(elemCount, tempX, accum, x);
                         } else {
-                            xf_multiply(elemCount, accum, tempX, x);
+                            xf_mul(elemCount, accum, tempX, x);
                         }
                         doneFlags = 0;
                     }
@@ -274,164 +274,185 @@ xf_from_string(u32 elemCount, String string, u32 *x)
 internal String
 string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
 {
-    u32 accum[elemCount + 1];
-    u32 xc[elemCount];
-    u32 xt[elemCount];
-
-    xf_copy(elemCount, x, xc);
-    u32 sign = xf_get_sign(elemCount, xc);
-    xf_make_positive(elemCount, xc);
-    s32 exponent = 0;
-    u32 *ten = xf_get_power_of_ten(elemCount, 0); // &gXF_Tens[0][0];
-
-    s32 i = xf_compare(elemCount, gXF_One, xc);
-    if (i != 0)
+    String result = {};
+    if (xf_is_infinite(elemCount, x))
     {
-        if (xf_get_exponent(elemCount, xc) != 0)
+        result = string_fmt(maxDataCount, data, "%sINF", xf_get_sign(elemCount, x) ? "-" : "");
+    }
+    else if (!xf_get_exponent(elemCount, x))
+    {
+        result = string_fmt(maxDataCount, data, "0.0E0");
+    }
+    else
+    {
+        u32 accum[elemCount + 1];
+        u32 xc[elemCount];
+        u32 xt[elemCount];
+
+        xf_copy(elemCount, x, xc);
+        u32 sign = xf_get_sign(elemCount, xc);
+        xf_make_positive(elemCount, xc);
+        s32 exponent = 0;
+        u32 *ten = xf_get_power_of_ten(elemCount, 0); // &gXF_Tens[0][0];
+
+        s32 i = xf_compare(elemCount, gXF_One, xc);
+        if (i != 0)
         {
-            if (i < 0)
+            if (xf_get_exponent(elemCount, xc) != 0)
             {
-                s32 k = XFLOAT_MAX_NTEN;
-                u32 *p = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
-                xf_copy(elemCount, gXF_One, accum);
-                xf_copy(elemCount, xc, xt);
-                while (xf_compare(elemCount, ten, xc) <= 0)
+                if (i < 0)
                 {
-                    if (xf_compare(elemCount, p, xt) <= 0)
+                    s32 k = XFLOAT_MAX_NTEN;
+                    u32 *p = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
+                    xf_copy(elemCount, gXF_One, accum);
+                    xf_copy(elemCount, xc, xt);
+                    while (xf_compare(elemCount, ten, xc) <= 0)
                     {
-                        xf_divide(elemCount, xt, p, xt);
-                        xf_multiply(elemCount, p, accum, accum);
-                        exponent += k;
+                        if (xf_compare(elemCount, p, xt) <= 0)
+                        {
+                            xf_div(elemCount, xt, p, xt);
+                            xf_mul(elemCount, p, accum, accum);
+                            exponent += k;
+                        }
+                        k >>= 1;
+
+                        if (k == 0) {
+                            break;
+                        }
+                        p -= elemCount;
                     }
-                    k >>= 1;
-
-                    if (k == 0) {
-                        break;
-                    }
-                    p -= elemCount;
-                }
-                xf_divide(elemCount, xc, accum, xc);
-            }
-            else
-            {
-                s32 k = XFLOAT_MIN_NTEN;
-                u32 *p = xf_get_power_of_tenths(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tenths[XFLOAT_NUMBER_TENS][0];
-                u32 *r = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
-                u32 *tenth = xf_get_power_of_tenths(elemCount, 0); // &gXF_Tenths[0][0];
-                while (xf_compare(elemCount, tenth, xc) > 0)
-                {
-                    if (xf_compare(elemCount, p, xc) >= 0)
-                    {
-                        xf_multiply(elemCount, r, xc, xc);
-                        exponent += k;
-                    }
-                    k /= 2;
-
-                    if (k == 0) {
-                        break;
-                    }
-                    p -= elemCount;
-                    r -= elemCount;
-                }
-                xf_multiply_int(elemCount, ten, xc, xc);
-                exponent -= 1;
-            }
-        }
-        else
-        {
-            xf_clear(elemCount, xc);
-        }
-    }
-
-    s64 digit = xf_integer_fraction(elemCount, xc, xc);
-    if (digit >= 10)
-    {
-        xf_divide(elemCount, xc, ten, xc);
-        ++exponent;
-        digit = 1;
-    }
-
-    char *s = (char *)data;
-    if (sign != 0) {
-        *s++ = '-';
-    } else {
-        *s++ = ' ';
-    }
-
-    *s++ = (char)digit | 0x30;
-    *s++ = '.';
-
-    if (digits < 0) {
-        digits = 0;
-    }
-    if (digits > XFLOAT_MAX_DEC(elemCount)) {
-        digits = XFLOAT_MAX_DEC(elemCount);
-    }
-    if (digits > (maxDataCount - 3)) {
-        digits = maxDataCount - 3; // NOTE(michiel): 1 for sign, 1 for first digit and 1 for the dot
-    }
-
-    for (u32 k = 0; k < digits; ++k)
-    {
-        xf_multiply_int(elemCount, ten, xc, xc);
-        digit = xf_integer_fraction(elemCount, xc, xc);
-        *s++ = (char)digit | 0x30;
-    }
-
-    *s = '\0';
-    char *ss = s;
-
-    xf_multiply_int(elemCount, ten, xc, xc);
-    digit = xf_integer_fraction(elemCount, xc, xc);
-    if (digit > 4)
-    {
-        b32 done = false;
-        if (digit == 5)
-        {
-            if (xf_compare(elemCount, xc, gXF_Zero) == 0)
-            {
-                if ((*(s - 1) & 0x1) == 0)
-                {
-                    done = true;
-                }
-            }
-        }
-
-        while (!done)
-        {
-            --s;
-            s32 k = *s & 0x7F;
-            if (k == '.')
-            {
-                --s;
-                k = *s & 0x7F;
-                k += 1;
-                *s = k;
-                if (k > '9')
-                {
-                    *s = '1';
-                    ++exponent;
-                }
-                done = true;
-            }
-            else
-            {
-                k += 1;
-                *s = k;
-                if (k > '9')
-                {
-                    *s = '0';
+                    xf_div(elemCount, xc, accum, xc);
                 }
                 else
                 {
+                    s32 k = XFLOAT_MIN_NTEN;
+                    u32 *p = xf_get_power_of_tenths(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tenths[XFLOAT_NUMBER_TENS][0];
+                    u32 *r = xf_get_power_of_ten(elemCount, XFLOAT_NUMBER_TENS); // &gXF_Tens[XFLOAT_NUMBER_TENS][0];
+                    u32 *tenth = xf_get_power_of_tenths(elemCount, 0); // &gXF_Tenths[0][0];
+                    while (xf_compare(elemCount, tenth, xc) > 0)
+                    {
+                        if (xf_compare(elemCount, p, xc) >= 0)
+                        {
+                            xf_mul(elemCount, r, xc, xc);
+                            exponent += k;
+                        }
+                        k /= 2;
+
+                        if (k == 0) {
+                            break;
+                        }
+                        p -= elemCount;
+                        r -= elemCount;
+                    }
+                    xf_multiply_int(elemCount, ten, xc, xc);
+                    exponent -= 1;
+                }
+            }
+            else
+            {
+                xf_clear(elemCount, xc);
+            }
+        }
+
+        s64 digit = xf_integer_fraction(elemCount, xc, xc);
+        if (digit >= 10)
+        {
+            xf_div(elemCount, xc, ten, xc);
+            ++exponent;
+            digit = 1;
+        }
+
+        char *s = (char *)data;
+        if (sign != 0) {
+            *s++ = '-';
+        } else {
+            *s++ = ' ';
+        }
+
+        *s++ = (char)digit | 0x30;
+        *s++ = '.';
+
+        if (digits < 0) {
+            digits = 0;
+        }
+        if (digits > XFLOAT_MAX_DEC(elemCount)) {
+            digits = XFLOAT_MAX_DEC(elemCount);
+        }
+        if (digits > (maxDataCount - 3)) {
+            digits = maxDataCount - 3; // NOTE(michiel): 1 for sign, 1 for first digit and 1 for the dot
+        }
+
+        for (u32 k = 0; k < digits; ++k)
+        {
+            xf_multiply_int(elemCount, ten, xc, xc);
+            digit = xf_integer_fraction(elemCount, xc, xc);
+            *s++ = (char)digit | 0x30;
+        }
+
+        *s = '\0';
+        char *ss = s;
+
+        xf_multiply_int(elemCount, ten, xc, xc);
+        digit = xf_integer_fraction(elemCount, xc, xc);
+        if (digit > 4)
+        {
+            b32 done = false;
+            if (digit == 5)
+            {
+                if (xf_compare(elemCount, xc, gXF_Zero) == 0)
+                {
+                    if ((*(s - 1) & 0x1) == 0)
+                    {
+                        done = true;
+                    }
+                }
+            }
+
+            while (!done)
+            {
+                --s;
+                s32 k = *s & 0x7F;
+                if (k == '.')
+                {
+                    --s;
+                    k = *s & 0x7F;
+                    k += 1;
+                    *s = k;
+                    if (k > '9')
+                    {
+                        *s = '1';
+                        ++exponent;
+                    }
                     done = true;
+                }
+                else
+                {
+                    k += 1;
+                    *s = k;
+                    if (k > '9')
+                    {
+                        *s = '0';
+                    }
+                    else
+                    {
+                        done = true;
+                    }
                 }
             }
         }
+
+        sprintf(ss, "E%d", exponent);
+
+        result = string((char *)data);
     }
 
-    sprintf(ss, "E%d", exponent);
-
-    String result = string((char *)data);
     return result;
+}
+
+internal void
+xf_print(u32 elemCount, u32 *x, u32 digits = U32_MAX)
+{
+    u8 stringBuf[512];
+    String xStr = string_from_xf(elemCount, x, digits, array_count(stringBuf), stringBuf);
+    fprintf(stdout, "%.*s", STR_FMT(xStr));
 }

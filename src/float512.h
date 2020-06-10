@@ -54,7 +54,7 @@ operator +(f512 &a, f512 &b)
 internal f512 &
 operator -=(f512 &a, f512 &b)
 {
-    xf_subtract(F512_ELEMENT_COUNT, a.e, b.e, a.e);
+    xf_sub(F512_ELEMENT_COUNT, a.e, b.e, a.e);
     return a;
 }
 
@@ -62,14 +62,14 @@ internal f512
 operator -(f512 &a, f512 &b)
 {
     f512 result;
-    xf_subtract(F512_ELEMENT_COUNT, a.e, b.e, result.e);
+    xf_sub(F512_ELEMENT_COUNT, a.e, b.e, result.e);
     return result;
 }
 
 internal f512 &
 operator *=(f512 &a, f512 &b)
 {
-    xf_multiply(F512_ELEMENT_COUNT, a.e, b.e, a.e);
+    xf_mul(F512_ELEMENT_COUNT, a.e, b.e, a.e);
     return a;
 }
 
@@ -77,14 +77,14 @@ internal f512
 operator *(f512 &a, f512 &b)
 {
     f512 result;
-    xf_multiply(F512_ELEMENT_COUNT, a.e, b.e, result.e);
+    xf_mul(F512_ELEMENT_COUNT, a.e, b.e, result.e);
     return result;
 }
 
 internal f512 &
 operator /=(f512 &a, f512 &b)
 {
-    xf_divide(F512_ELEMENT_COUNT, a.e, b.e, a.e);
+    xf_div(F512_ELEMENT_COUNT, a.e, b.e, a.e);
     return a;
 }
 
@@ -92,7 +92,7 @@ internal f512
 operator /(f512 &a, f512 &b)
 {
     f512 result;
-    xf_divide(F512_ELEMENT_COUNT, a.e, b.e, result.e);
+    xf_div(F512_ELEMENT_COUNT, a.e, b.e, result.e);
     return result;
 }
 

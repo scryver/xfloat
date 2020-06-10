@@ -149,7 +149,7 @@ xf_floor(u32 elemCount, u32 *src, u32 *dst)
             if (xf_get_sign(elemCount, buf))
             {
                 if (xf_compare(elemCount, buf, dst) != 0) {
-                    xf_subtract(elemCount, dst, gXF_One, dst);
+                    xf_sub(elemCount, dst, gXF_One, dst);
                 }
             }
         }
@@ -176,7 +176,7 @@ xf_round(u32 elemCount, u32 *src, u32 *dst)
     u32 z[elemCount];
 
     xf_floor(elemCount, src, z);
-    xf_subtract(elemCount, src, z, dst);
+    xf_sub(elemCount, src, z, dst);
 
     s32 r = xf_compare(elemCount, dst, gXF_Half);
     if (r > 0)
@@ -222,22 +222,22 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
             xf_set_exponent(elemCount, accum1, XFLOAT_EXP_BIAS);                   // A => RANGE (-1, 1)
 
             // NOTE(michiel): y = (x * coef2 + coef1) * x + coef0
-            xf_multiply(elemCount, gXF_SquareRootCoef2, accum1, accum2);           // B = A * C2  | C2*X
+            xf_mul(elemCount, gXF_SquareRootCoef2, accum1, accum2);           // B = A * C2  | C2*X
             xf_add(elemCount, gXF_SquareRootCoef1, accum2, accum2);                // B += C1     | C2*X + C1
-            xf_multiply(elemCount, accum1, accum2, accum2);                        // B *= A      | C2*X^2 + C1*X
+            xf_mul(elemCount, accum1, accum2, accum2);                        // B *= A      | C2*X^2 + C1*X
             xf_add(elemCount, gXF_SquareRootCoef0, accum2, accum2);                // B += C0     | C2*X^2 + C1*X + C0
 
             xf_set_exponent(elemCount, accum2, (exponent / 2) + XFLOAT_EXP_BIAS);  // B => RANGE(-SQRT(X), SQRT(X))
 
             if (exponent & 0x1)                                                    // Exponent is odd
             {
-                xf_multiply(elemCount, gXF_Sqrt2, accum2, accum2);                 // B *= SQRT(2)
+                xf_mul(elemCount, gXF_Sqrt2, accum2, accum2);                 // B *= SQRT(2)
             }
 
             for (u32 index = 0; index < iterations; ++index)
             {
                 // NOTE(michiel): X / ASQRT(X) should approach SQRT(X)
-                xf_divide(elemCount, src, accum2, accum1);                         // A = X / B    | X / ASQRT(X)
+                xf_div(elemCount, src, accum2, accum1);                         // A = X / B    | X / ASQRT(X)
                 xf_add(elemCount, accum1, accum2, accum2);                         // B = A + B    | X / ASQRT(X) + ASQRT(X)
                 xf_naive_div2(elemCount, accum2);                                  // B /= 2       | (X / ASQRT(X) + ASQRT(X)) / 2
             }
@@ -291,8 +291,8 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                     xf_naive_mul2(elemCount, accumX);                         // X <<= 1
                 }
 
-                xf_add(elemCount, gXF_One, accumX, accumB);                   // B = 1 + X
-                xf_subtract(elemCount, accumX, gXF_One, accumX);              // X = X - 1
+                xf_add(elemCount, accumX, gXF_One, accumB);                   // B = X + 1
+                xf_sub(elemCount, accumX, gXF_One, accumX);              // X = X - 1
                 if (!xf_get_exponent(elemCount, accumX))
                 {
                     xf_clear(elemCount, dst);
@@ -304,9 +304,9 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                     u32 accumZ[elemCount];
                     u32 accumJ[elemCount];
 
-                    xf_divide(elemCount, accumX, accumB, dst);                // Y = X / B      | (X - 1) / (X + 1)
+                    xf_div(elemCount, accumX, accumB, dst);                // Y = X / B      | (X - 1) / (X + 1)
 
-                    xf_multiply(elemCount, dst, dst, accumZ);                 // Z = Y^2
+                    xf_mul(elemCount, dst, dst, accumZ);                 // Z = Y^2
 
                     xf_copy(elemCount, gXF_One, accumX);                      // X = 1
                     xf_copy(elemCount, gXF_One, accumB);                      // B = 1
@@ -316,13 +316,13 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                     do
                     {
                         xf_add(elemCount, gXF_Two, accumJ, accumJ);           // J += 2       /* 2 * i + 1 */
-                        xf_multiply(elemCount, accumZ, accumX, accumX);       // X *= Z       | X * Y^2
-                        xf_divide(elemCount, accumX, accumJ, accumT);         // T = X / J    | (X * Y^2) / J
+                        xf_mul(elemCount, accumZ, accumX, accumX);       // X *= Z       | X * Y^2
+                        xf_div(elemCount, accumX, accumJ, accumT);         // T = X / J    | (X * Y^2) / J
                         xf_add(elemCount, accumT, accumB, accumB);            // B += T       | ...
                     }
                     while((s32)(xf_get_exponent(elemCount, accumB) - xf_get_exponent(elemCount, accumT)) < XFLOAT_MAX_BITS(elemCount));
 
-                    xf_multiply(elemCount, accumB, dst, dst);                 // Y *= B
+                    xf_mul(elemCount, accumB, dst, dst);                 // Y *= B
                     xf_naive_mul2(elemCount, dst);                            // Y <<= 1
                 }
 
@@ -330,9 +330,9 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                 if (exponent != 0)
                 {
                     xf_from_s32(elemCount, exponent, accumB);                 // B = XF(exponent)
-                    xf_multiply(elemCount, gXF_Log2Lower, accumB, accumT);    // T = B * LOG(2)[high]
+                    xf_mul(elemCount, gXF_Log2Lower, accumB, accumT);    // T = B * LOG(2)[high]
                     xf_add(elemCount, accumT, dst, dst);                      // Y += T
-                    xf_multiply(elemCount, gXF_Log2Upper, accumB, accumT);    // T = B * LOG(2)[low]
+                    xf_mul(elemCount, gXF_Log2Upper, accumB, accumT);    // T = B * LOG(2)[low]
                     xf_add(elemCount, accumT, dst, dst);                      // Y += T
                 }
             }
@@ -360,12 +360,12 @@ xf_log2(u32 elemCount, u32 *src, u32 *dst)
     u32 accum[elemCount];
 
     xf_log(elemCount, src, logSrc);
-    xf_multiply(elemCount, gXF_Log2eLower, logSrc, dst);
-    xf_multiply(elemCount, gXF_Log2eUpper, logSrc, accum);
+    xf_mul(elemCount, gXF_Log2eLower, logSrc, dst);
+    xf_mul(elemCount, gXF_Log2eUpper, logSrc, accum);
     xf_add(elemCount, accum, dst, dst);
 #else
     xf_log(elemCount, src, dst);                // Y = LOG(X)
-    xf_divide(elemCount, dst, gXF_Log2, dst);   // Y /= LOG(2)        | LOG(X) / LOG(2)
+    xf_div(elemCount, dst, gXF_Log2, dst);   // Y /= LOG(2)        | LOG(X) / LOG(2)
 #endif
 }
 
@@ -377,12 +377,12 @@ xf_log10(u32 elemCount, u32 *src, u32 *dst)
     u32 accum[elemCount];
 
     xf_log(elemCount, src, accum);
-    xf_multiply(elemCount, gXF_Log10eLower, accum, dst);
-    xf_multiply(elemCount, gXF_Log10eUpper, accum, accum);
+    xf_mul(elemCount, gXF_Log10eLower, accum, dst);
+    xf_mul(elemCount, gXF_Log10eUpper, accum, accum);
     xf_add(elemCount, accum, dst, dst);
 #else
     xf_log(elemCount, src, dst);               // Y = LOG(X)
-    xf_divide(elemCount, dst, gXF_Log10, dst); // Y /= LOG(10)        | LOG(X) / LOG(10)
+    xf_div(elemCount, dst, gXF_Log10, dst); // Y /= LOG(10)        | LOG(X) / LOG(10)
 #endif
 }
 
@@ -398,7 +398,7 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
      */
 
     /* Catch overflow that might cause an endless recursion below.  */
-    // TODO(michiel): Let the max exponent depend on elemCount
+    // TODO(michiel): Let the max exponent depend on XFLOAT_MAX_EXPONENT
     if (xf_get_exponent(elemCount, src) < XFLOAT_EXP_ONE + 15)
     {
         if (xf_get_exponent(elemCount, src))
@@ -408,20 +408,20 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
             u32 accum[elemCount];
 
             xf_copy(elemCount, src, accum);                                 // A = X
-            xf_divide(elemCount, accum, gXF_Log2, denominator);             // D = A / LOG(2)   | X / LOG(2)
+            xf_div(elemCount, accum, gXF_Log2, denominator);             // D = A / LOG(2)   | X / LOG(2)
             xf_add(elemCount, gXF_Half, denominator, denominator);          // D += 0.5         | 0.5 + X / LOG(2)
             xf_floor(elemCount, denominator, numerator);                    // N = FLOOR(D)     | FLOOR(0.5 + X / LOG(2))
             s64 i = xf_integer_fraction(elemCount, numerator, denominator); // I = INT(N)
-            xf_multiply(elemCount, gXF_Log2Upper, numerator, denominator);  // D = N * LOG(2)[high]
-            xf_subtract(elemCount, accum, denominator, accum);              // A -= D
-            xf_multiply(elemCount, gXF_Log2Lower, numerator, denominator);  // D = N * LOG(2)[low]
-            xf_subtract(elemCount, accum, denominator, accum);              // A -= D           | X - LOG(2) * FLOOR(0.5 + X / LOG(2))
+            xf_mul(elemCount, gXF_Log2Upper, numerator, denominator);  // D = N * LOG(2)[high]
+            xf_sub(elemCount, accum, denominator, accum);              // A -= D
+            xf_mul(elemCount, gXF_Log2Lower, numerator, denominator);  // D = N * LOG(2)[low]
+            xf_sub(elemCount, accum, denominator, accum);              // A -= D           | X - LOG(2) * FLOOR(0.5 + X / LOG(2))
 
             xf_naive_div2(elemCount, accum);                                // A >>= 1          | X / 2
             xf_tanh(elemCount, accum, accum);                               // A = TANH(A)      | TANH(X / 2)
             xf_add(elemCount, gXF_One, accum, numerator);                   // N = 1 + A        | 1 + TANH(X / 2)
-            xf_subtract(elemCount, gXF_One, accum, denominator);            // D = 1 - A        | 1 - TANH(X / 2)
-            xf_divide(elemCount, numerator, denominator, dst);              // Y = N / D        | (1 + TANH(X/2)) / (1 - TANH(X/2))
+            xf_sub(elemCount, gXF_One, accum, denominator);            // D = 1 - A        | 1 - TANH(X / 2)
+            xf_div(elemCount, numerator, denominator, dst);              // Y = N / D        | (1 + TANH(X/2)) / (1 - TANH(X/2))
 
             i += xf_get_exponent(elemCount, dst);
             if (i > XFLOAT_MAX_EXPONENT)
@@ -463,7 +463,7 @@ internal void
 xf_exp2(u32 elemCount, u32 *src, u32 *dst)
 {
     // NOTE(michiel): 2^x = e^(x * log(2))
-    xf_multiply(elemCount, src, gXF_Log2, dst);
+    xf_mul(elemCount, src, gXF_Log2, dst);
     xf_exp(elemCount, dst, dst);
 }
 
@@ -471,7 +471,7 @@ internal void
 xf_exp10(u32 elemCount, u32 *src, u32 *dst)
 {
     // NOTE(michiel): 10^x = e^(x * log(10))
-    xf_multiply(elemCount, src, gXF_Log10, dst);
+    xf_mul(elemCount, src, gXF_Log10, dst);
     xf_exp(elemCount, dst, dst);
 }
 
@@ -500,7 +500,7 @@ xf_pow(u32 elemCount, u32 *base, u32 *power, u32 *dst)
     if (!done)
     {
         xf_log(elemCount, base, accum);                        // A = LOG(B)
-        xf_multiply(elemCount, power, accum, accum);           // A *= P
+        xf_mul(elemCount, power, accum, accum);           // A *= P
         xf_exp(elemCount, accum, dst);                         // Y = EXP(A)   | e^(power * log(base))
     }
 }
@@ -580,10 +580,10 @@ xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst)
                     li >>= 1;
                     while (li)
                     {
-                        xf_multiply(elemCount, accum, accum, accum);
+                        xf_mul(elemCount, accum, accum, accum);
                         if (li & 1)
                         {
-                            xf_multiply(elemCount, accum, dst, dst);
+                            xf_mul(elemCount, accum, dst, dst);
                         }
                         li >>= 1;
                     }
@@ -597,7 +597,7 @@ xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst)
                     {
                         if (xf_get_exponent(elemCount, dst))
                         {
-                            xf_divide(elemCount, gXF_One, dst, dst);
+                            xf_div(elemCount, gXF_One, dst, dst);
                         }
                         else
                         {
@@ -642,7 +642,7 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
     xf_copy(elemCount, src, accum4);                                                   // vvvvvv
     xf_make_positive(elemCount, accum4);                                               // accum4 = absolute(src);
     /* range reduction to [0, pi/2] */
-    xf_divide(elemCount, accum4, gXF_PiOver2, accum1);                                 // accum1 = accum4 / (Pi/2)
+    xf_div(elemCount, accum4, gXF_PiOver2, accum1);                                 // accum1 = accum4 / (Pi/2)
     xf_floor(elemCount, accum1, accum4);                                               // accum4 = floor(accum1)
 
     /* accum2 = accum4 - 8 * floor(accum4/8) */
@@ -653,7 +653,7 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
         xf_floor(elemCount, accum4, accum2);
         xf_set_exponent(elemCount, accum2, xf_get_exponent(elemCount, accum2) + 3);
         xf_set_exponent(elemCount, accum4, exponentAccum4);
-        xf_subtract(elemCount, accum4, accum2, accum2);
+        xf_sub(elemCount, accum4, accum2, accum2);
     }
     else
     {
@@ -662,9 +662,9 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
 
     s64 mod = xf_integer_fraction(elemCount, accum2, accum2);
 
-    xf_subtract(elemCount, accum1, accum4, accum2);
+    xf_sub(elemCount, accum1, accum4, accum2);
 #if 1
-    xf_multiply(elemCount, accum2, gXF_PiOver2, accum4);
+    xf_mul(elemCount, accum2, gXF_PiOver2, accum4);
 #else
     xf_multiply(elemCount, accum2, gXF_PiOver2Upper, accum4);
     xf_multiply(elemCount, accum2, gXF_PiOver2Lower, accum2);
@@ -678,11 +678,11 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
     }
     if (mod & 1)
     {
-        xf_subtract(elemCount, gXF_PiOver2, accum4, accum4); /* accum4 = 1 - accum4 */
+        xf_sub(elemCount, gXF_PiOver2, accum4, accum4); /* accum4 = 1 - accum4 */
     }
 
     u32 accum3[elemCount];
-    xf_multiply(elemCount, accum4, accum4, accum3);
+    xf_mul(elemCount, accum4, accum4, accum3);
     xf_negate(elemCount, accum3);
 
     xf_copy(elemCount, gXF_One, accum1);
@@ -693,15 +693,15 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
     do
     {
         xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1      */
-        xf_divide(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
+        xf_div(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
         xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1 */
-        xf_divide(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
-        xf_multiply(elemCount, accum3, accum2, accum2); /* accum2 *= accum3 */
+        xf_div(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
+        xf_mul(elemCount, accum3, accum2, accum2); /* accum2 *= accum3 */
         xf_add(elemCount, accum2, dst, dst);            /* dst += accum2 */
     }
     while((s32)(xf_get_exponent(elemCount, dst) - xf_get_exponent(elemCount, accum2)) < XFLOAT_MAX_BITS(elemCount));
 
-    xf_multiply(elemCount, accum4, dst, dst);
+    xf_mul(elemCount, accum4, dst, dst);
 
     dst[XFLOAT_SIGN_EXP_IDX] &= ~XFLOAT_SIGN_MASK;
     dst[XFLOAT_SIGN_EXP_IDX] |= sign;
@@ -710,7 +710,7 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_cos(u32 elemCount, u32 *src, u32 *dst)
 {
-    xf_subtract(elemCount, gXF_PiOver2, src, dst);
+    xf_sub(elemCount, gXF_PiOver2, src, dst);
     xf_sin(elemCount, dst, dst);
 }
 
@@ -725,10 +725,10 @@ xf_tan(u32 elemCount, u32 *src, u32 *dst)
     // NOTE(michiel): Range reduction to +/- pi/2
     u32 accumE[elemCount];
     xf_add(elemCount, accumX3, gXF_PiOver2, accumE);
-    xf_divide(elemCount, accumE, gXF_Pi, accumE);
+    xf_div(elemCount, accumE, gXF_Pi, accumE);
     xf_floor(elemCount, accumE, accumE);
-    xf_multiply(elemCount, accumE, gXF_Pi, accumE);
-    xf_subtract(elemCount, accumX3, accumE, accumX3);
+    xf_mul(elemCount, accumE, gXF_Pi, accumE);
+    xf_sub(elemCount, accumX3, accumE, accumX3);
 
     u32 accumJ[elemCount];
     u32 n = XFLOAT_MAX_BITS(elemCount) / 8;
@@ -737,19 +737,19 @@ xf_tan(u32 elemCount, u32 *src, u32 *dst)
     xf_copy(elemCount, accumJ, accumE);
 
     u32 accumX2[elemCount];
-    xf_multiply(elemCount, accumX3, accumX3, accumX2);
+    xf_mul(elemCount, accumX3, accumX3, accumX2);
     xf_negate(elemCount, accumX2);
 
     // NOTE(michiel): Continued fraction expansion
     u32 accumR[elemCount];
     for (u32 i = 0; i < n; ++i)
     {
-        xf_divide(elemCount, accumX2, accumE, accumR);
-        xf_subtract(elemCount, accumJ, gXF_Two, accumJ);
+        xf_div(elemCount, accumX2, accumE, accumR);
+        xf_sub(elemCount, accumJ, gXF_Two, accumJ);
         xf_add(elemCount, accumR, accumJ, accumE);
     }
 
-    xf_divide(elemCount, accumX3, accumE, dst);
+    xf_div(elemCount, accumX3, accumE, dst);
     if (sign)
     {
         xf_negate(elemCount, dst);
@@ -771,7 +771,7 @@ xf_asin(u32 elemCount, u32 *src, u32 *dst)
         u32 flag = 0;
         if (xf_compare(elemCount, accumA, gXF_Half) > 0)
         {
-            xf_subtract(elemCount, gXF_Half, accumA, accumZSqr);
+            xf_sub(elemCount, gXF_Half, accumA, accumZSqr);
             xf_add(elemCount, gXF_Half, accumZSqr, accumZSqr);
             if (xf_get_exponent(elemCount, accumZSqr))
             {
@@ -782,18 +782,18 @@ xf_asin(u32 elemCount, u32 *src, u32 *dst)
         }
         else
         {
-            xf_multiply(elemCount, accumA, accumA, accumZSqr);
+            xf_mul(elemCount, accumA, accumA, accumZSqr);
         }
 
-        xf_subtract(elemCount, gXF_One, accumZSqr, accumZSqr);
+        xf_sub(elemCount, gXF_One, accumZSqr, accumZSqr);
         xf_square_root(elemCount, accumZSqr, accumZSqr);
-        xf_divide(elemCount, accumA, accumZSqr, accumZSqr);
+        xf_div(elemCount, accumA, accumZSqr, accumZSqr);
         xf_atan(elemCount, accumZSqr, dst);
 
         if (flag)
         {
             xf_naive_mul2(elemCount, dst);
-            xf_subtract(elemCount, gXF_PiOver2, dst, dst);
+            xf_sub(elemCount, gXF_PiOver2, dst, dst);
         }
 
         dst[XFLOAT_SIGN_EXP_IDX] &= ~XFLOAT_SIGN_MASK;
@@ -819,7 +819,7 @@ xf_acos(u32 elemCount, u32 *src, u32 *dst)
     else
     {
         xf_asin(elemCount, src, dst);
-        xf_subtract(elemCount, gXF_PiOver2, dst, dst);
+        xf_sub(elemCount, gXF_PiOver2, dst, dst);
     }
 }
 
@@ -836,14 +836,14 @@ xf_atan(u32 elemCount, u32 *src, u32 *dst)
     {
         xf_copy(elemCount, gXF_PiOver2, accumY);
 
-        xf_divide(elemCount, gXF_One, accumX, accumX);
+        xf_div(elemCount, gXF_One, accumX, accumX);
         xf_negate(elemCount, accumX);
     }
     else if (xf_compare(elemCount, accumX, gXF_TanPiOver8) > 0)
     {
-        xf_subtract(elemCount, accumX, gXF_One, accumY);
+        xf_sub(elemCount, accumX, gXF_One, accumY);
         xf_add(elemCount, accumX, gXF_One, accumX);
-        xf_divide(elemCount, accumY, accumX, accumX);
+        xf_div(elemCount, accumY, accumX, accumX);
 
         xf_copy(elemCount, gXF_PiOver2, accumY);
         xf_naive_div2(elemCount, accumY);
@@ -854,7 +854,7 @@ xf_atan(u32 elemCount, u32 *src, u32 *dst)
     }
 
     u32 accumZ[elemCount];
-    xf_multiply(elemCount, accumX, accumX, accumZ);
+    xf_mul(elemCount, accumX, accumX, accumZ);
     if (xf_get_exponent(elemCount, accumZ))
     {
         u32 accumA[elemCount];
@@ -871,14 +871,14 @@ xf_atan(u32 elemCount, u32 *src, u32 *dst)
             s64 nsq = i * i;
             xf_from_s64(elemCount, nsq, accumA);
             xf_multiply_int(elemCount, accumA, accumZ, accumA);
-            xf_divide(elemCount, accumA, accumB, accumB);
+            xf_div(elemCount, accumA, accumB, accumB);
             j -= 2;
             --i;
-            xf_subtract(elemCount, accumJ, gXF_Two, accumJ);
+            xf_sub(elemCount, accumJ, gXF_Two, accumJ);
             xf_add(elemCount, accumJ, accumB, accumB);
         }
 
-        xf_divide(elemCount, accumX, accumB, dst);
+        xf_div(elemCount, accumX, accumB, dst);
     }
     else
     {
@@ -963,7 +963,7 @@ xf_atan2(u32 elemCount, u32 *y, u32 *x, u32 *dst)
         }
 
         // NOTE(michiel): dst = w + atan(y/x)
-        xf_divide(elemCount, y, x, dst);
+        xf_div(elemCount, y, x, dst);
         xf_atan(elemCount, dst, dst);
         xf_add(elemCount, accumW, dst, dst);
     }
@@ -983,7 +983,7 @@ xf_sinh(u32 elemCount, u32 *src, u32 *dst)
     else if (exponent < XFLOAT_EXP_BIAS)
     {
         u32 srcSqr[elemCount];
-        xf_multiply(elemCount, src, src, srcSqr);
+        xf_mul(elemCount, src, src, srcSqr);
 
         u32 accumN[elemCount];
         u32 accumF[elemCount];
@@ -997,20 +997,20 @@ xf_sinh(u32 elemCount, u32 *src, u32 *dst)
         do
         {
             xf_add(elemCount, gXF_One, accumN, accumN);       // ++N
-            xf_divide(elemCount, accumF, accumN, accumF);     // F /= N
+            xf_div(elemCount, accumF, accumN, accumF);     // F /= N
             xf_add(elemCount, gXF_One, accumN, accumN);       // ++N
-            xf_divide(elemCount, accumF, accumN, accumF);     // F /= N
-            xf_multiply(elemCount, srcSqr, accumF, accumF);   // F *= X
+            xf_div(elemCount, accumF, accumN, accumF);     // F /= N
+            xf_mul(elemCount, srcSqr, accumF, accumF);   // F *= X
             xf_add(elemCount, accumZ, accumF, accumZ);        // Z += F
         } while ((s32)(xf_get_exponent(elemCount, accumZ) - xf_get_exponent(elemCount, accumF)) < XFLOAT_MAX_BITS(elemCount));
 
-        xf_multiply(elemCount, src, accumZ, dst);
+        xf_mul(elemCount, src, accumZ, dst);
     }
     else
     {
         xf_exp(elemCount, src, accumZ);
-        xf_divide(elemCount, gXF_One, accumZ, dst);
-        xf_subtract(elemCount, accumZ, dst, dst);
+        xf_div(elemCount, gXF_One, accumZ, dst);
+        xf_sub(elemCount, accumZ, dst, dst);
         xf_naive_div2(elemCount, dst);
     }
 }
@@ -1023,7 +1023,7 @@ xf_cosh(u32 elemCount, u32 *src, u32 *dst)
     u32 accum[elemCount];
 
     xf_exp(elemCount, src, accum);
-    xf_divide(elemCount, gXF_One, accum, dst);
+    xf_div(elemCount, gXF_One, accum, dst);
     xf_add(elemCount, accum, dst, dst);
     if (xf_get_exponent(elemCount, dst))
     {
@@ -1052,10 +1052,10 @@ xf_tanh(u32 elemCount, u32 *src, u32 *dst)
          * Note qexp() calls qtanh, but with an argument less than (1 + log 2)/2.
      */
         xf_exp(elemCount, accumR, accumE);               // E = e^R
-        xf_divide(elemCount, gXF_One, accumE, accumR);   // R = 1 / E (e^-R)
-        xf_subtract(elemCount, accumE, accumR, dst);     // dst = E - R
+        xf_div(elemCount, gXF_One, accumE, accumR);   // R = 1 / E (e^-R)
+        xf_sub(elemCount, accumE, accumR, dst);     // dst = E - R
         xf_add(elemCount, accumE, accumR, accumE);       // E += R
-        xf_divide(elemCount, dst, accumE, dst);          // dst /= E
+        xf_div(elemCount, dst, accumE, dst);          // dst /= E
     }
     else
     {
@@ -1068,17 +1068,17 @@ xf_tanh(u32 elemCount, u32 *src, u32 *dst)
         xf_from_s64(elemCount, lj, accumJ);
 
         xf_copy(elemCount, accumJ, accumE);
-        xf_multiply(elemCount, src, src, accumX);
+        xf_mul(elemCount, src, src, accumX);
 
         /* continued fraction */
         for (u32 i = 0; i < n; ++i)
         {
-            xf_divide(elemCount, accumX, accumE, accumR);    // R = X / E
-            xf_subtract(elemCount, accumJ, gXF_Two, accumJ); // J = J - 2
+            xf_div(elemCount, accumX, accumE, accumR);    // R = X / E
+            xf_sub(elemCount, accumJ, gXF_Two, accumJ); // J = J - 2
             xf_add(elemCount, accumR, accumJ, accumE);       // E = R + J
         }
 
-        xf_divide(elemCount, src, accumE, dst);
+        xf_div(elemCount, src, accumE, dst);
     }
 
     if (sign)
@@ -1104,7 +1104,7 @@ xf_asinh(u32 elemCount, u32 *src, u32 *dst)
         }
         else
         {
-            xf_multiply(elemCount, accumX, accumX, dst);
+            xf_mul(elemCount, accumX, accumX, dst);
             xf_add(elemCount, gXF_One, dst, dst);
             xf_square_root(elemCount, dst, dst);
             xf_add(elemCount, accumX, dst, dst);
@@ -1124,7 +1124,7 @@ xf_asinh(u32 elemCount, u32 *src, u32 *dst)
         u32 accumS[elemCount];
         u32 accumX2[elemCount];
 
-        xf_multiply(elemCount, accumX, accumX, accumZ);
+        xf_mul(elemCount, accumX, accumX, accumZ);
         xf_add(elemCount, gXF_One, accumZ, accumA);
         xf_square_root(elemCount, accumA, accumA);
 
@@ -1137,21 +1137,21 @@ xf_asinh(u32 elemCount, u32 *src, u32 *dst)
         {
             s64 j = i * (i - 1);
             xf_from_s64(elemCount, j, accumB);
-            xf_multiply(elemCount, accumB, accumZ, accumB);
+            xf_mul(elemCount, accumB, accumZ, accumB);
             xf_from_s64(elemCount, n, accumX2);
             xf_add(elemCount, accumS, accumX2, accumX2);
-            xf_divide(elemCount, accumB, accumX2, accumS);
+            xf_div(elemCount, accumB, accumX2, accumS);
             n -= 2;
             xf_from_s64(elemCount, n, accumX2);
             xf_add(elemCount, accumS, accumX2, accumX2);
-            xf_divide(elemCount, accumB, accumX2, accumS);
+            xf_div(elemCount, accumB, accumX2, accumS);
             n -= 2;
             i -= 2;
         } while (n > 1);
 
         xf_add(elemCount, gXF_One, accumS, accumS);
-        xf_divide(elemCount, accumA, accumS, accumA);
-        xf_multiply(elemCount, accumA, accumX, dst);
+        xf_div(elemCount, accumA, accumS, accumA);
+        xf_mul(elemCount, accumA, accumX, dst);
         if (sign)
         {
             xf_negate(elemCount, dst);
@@ -1175,8 +1175,8 @@ xf_acosh(u32 elemCount, u32 *src, u32 *dst)
     else
     {
         u32 accum[elemCount];
-        xf_multiply(elemCount, src, src, accum);       // A = X^2
-        xf_subtract(elemCount, accum, gXF_One, accum); // A -= 1       | X^2 - 1
+        xf_mul(elemCount, src, src, accum);       // A = X^2
+        xf_sub(elemCount, accum, gXF_One, accum); // A -= 1       | X^2 - 1
         xf_square_root(elemCount, accum, accum);       // A = SQRT(A)  | SQRT(X^2 - 1)
         xf_add(elemCount, src, accum, accum);          // A += X       | X + SQRT(X^2 - 1)
         xf_log(elemCount, accum, dst);                 // Y = LOG(A)   | LOG(X + SQRT(X^2 - 1))
@@ -1203,13 +1203,13 @@ xf_atanh(u32 elemCount, u32 *src, u32 *dst)
     else if (((s64)XFLOAT_EXP_ONE - (s64)xf_get_exponent(elemCount, src)) >= (XFLOAT_MAX_BITS(elemCount) / 4))
     {
         // NOTE(michiel): X + X^3/3 + X^5/5
-        xf_multiply(elemCount, accumA, accumA, accumB);  // B = A^2     | |X|^2
-        xf_multiply(elemCount, accumA, accumB, dst);     // Y = A^3     | |X|^3
+        xf_mul(elemCount, accumA, accumA, accumB);  // B = A^2     | |X|^2
+        xf_mul(elemCount, accumA, accumB, dst);     // Y = A^3     | |X|^3
 
-        xf_multiply(elemCount, accumB, dst, accumB);     // B = A^5     | |X|^5
-        xf_divide(elemCount, dst, gXF_Three, dst);       // Y = A^3/3   | |X|^3 / 3
+        xf_mul(elemCount, accumB, dst, accumB);     // B = A^5     | |X|^5
+        xf_div(elemCount, dst, gXF_Three, dst);       // Y = A^3/3   | |X|^3 / 3
 
-        xf_divide(elemCount, accumB, gXF_Five, accumB);  // B = A^5/5   | |X|^5 / 5
+        xf_div(elemCount, accumB, gXF_Five, accumB);  // B = A^5/5   | |X|^5 / 5
         xf_add(elemCount, accumB, dst, dst);             // Y += B      | |X|^3 / 3 + |X|^5 / 5
         xf_add(elemCount, accumA, dst, dst);             // Y += A      | |X| + |X|^3 / 3 + |X|^5 / 5
 
@@ -1220,8 +1220,8 @@ xf_atanh(u32 elemCount, u32 *src, u32 *dst)
     {
         // NOTE(michiel): 0.5 * log((1+x)/(1-x))
         xf_add(elemCount, gXF_One, src, accumA);         // A = 1 + X      | 1 + X
-        xf_subtract(elemCount, gXF_One, src, dst);       // Y = 1 - X      | 1 - X
-        xf_divide(elemCount, accumA, dst, accumA);       // A /= Y         | (1 + X) / (1 - X)
+        xf_sub(elemCount, gXF_One, src, dst);       // Y = 1 - X      | 1 - X
+        xf_div(elemCount, accumA, dst, accumA);       // A /= Y         | (1 + X) / (1 - X)
         xf_log(elemCount, accumA, dst);                  // Y = LOG(A)     | LOG((1 + X) / (1 - X))
         if (xf_get_exponent(elemCount, dst))
         {
