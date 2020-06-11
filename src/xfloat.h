@@ -185,7 +185,7 @@ xf_max_value(u32 elemCount, u32 *x)
 internal b32
 xf_is_infinite(u32 elemCount, u32 *x)
 {
-    b32 result = xf_get_exponent(elemCount, x) == XFLOAT_MAX_EXPONENT;
+    b32 result = xf_get_exponent(elemCount, x) >= XFLOAT_MAX_EXPONENT;
     return result;
 }
 

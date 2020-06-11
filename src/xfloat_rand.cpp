@@ -31,12 +31,22 @@ xf_random_in_exp_range(RandomSeriesPCG *series, u32 elemCount, s32 minExp, s32 m
 internal void
 xf_random_bilateral(RandomSeriesPCG *series, u32 elemCount, u32 *dst)
 {
+    // NOTE(michiel): Doesn't cover all values! (especially in the very small range)
     xf_random(series, elemCount, dst);
-    u32 exponent = xf_get_exponent(elemCount, dst);
-    if (exponent > XFLOAT_EXP_BIAS)
-    {
-        xf_set_exponent(elemCount, dst, exponent - XFLOAT_EXP_BIAS);
+    u32 randExp = random_next_u32(series);
+    u32 exponent = XFLOAT_EXP_BIAS;
+    for (u32 idx = 0; idx < 32; ++idx) {
+        if (randExp & 0x1)
+        {
+            --exponent;
+            randExp >>= 1;
+        }
+        else
+        {
+            break;
+        }
     }
+    xf_set_exponent(elemCount, dst, exponent);
 }
 
 internal void

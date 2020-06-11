@@ -14,6 +14,14 @@ F512(f32 f)
 }
 
 internal f512
+F512(s32 s)
+{
+    f512 result;
+    xf_from_s32(F512_ELEMENT_COUNT, s, result.e);
+    return result;
+}
+
+internal f512
 F512(String s)
 {
     f512 result;

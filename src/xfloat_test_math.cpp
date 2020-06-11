@@ -546,6 +546,7 @@ int main(int argc, char **argv)
 
     test_square_root(&env, ELEMENT_COUNT);
     test_log(&env, ELEMENT_COUNT);
+    test_exp(&env, ELEMENT_COUNT);
 
     return 0;
 }
