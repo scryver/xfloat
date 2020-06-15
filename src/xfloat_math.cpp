@@ -292,7 +292,7 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                 }
 
                 xf_add(elemCount, accumX, gXF_One, accumB);                   // B = X + 1
-                xf_sub(elemCount, accumX, gXF_One, accumX);              // X = X - 1
+                xf_sub(elemCount, accumX, gXF_One, accumX);                   // X = X - 1
                 if (!xf_get_exponent(elemCount, accumX))
                 {
                     xf_clear(elemCount, dst);
@@ -304,9 +304,9 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                     u32 accumZ[elemCount];
                     u32 accumJ[elemCount];
 
-                    xf_div(elemCount, accumX, accumB, dst);                // Y = X / B      | (X - 1) / (X + 1)
+                    xf_div(elemCount, accumX, accumB, dst);                   // Y = X / B      | (X - 1) / (X + 1)
 
-                    xf_mul(elemCount, dst, dst, accumZ);                 // Z = Y^2
+                    xf_mul(elemCount, dst, dst, accumZ);                      // Z = Y^2
 
                     xf_copy(elemCount, gXF_One, accumX);                      // X = 1
                     xf_copy(elemCount, gXF_One, accumB);                      // B = 1
@@ -316,13 +316,13 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
                     do
                     {
                         xf_add(elemCount, gXF_Two, accumJ, accumJ);           // J += 2       /* 2 * i + 1 */
-                        xf_mul(elemCount, accumZ, accumX, accumX);       // X *= Z       | X * Y^2
-                        xf_div(elemCount, accumX, accumJ, accumT);         // T = X / J    | (X * Y^2) / J
+                        xf_mul(elemCount, accumZ, accumX, accumX);            // X *= Z       | X * Y^2
+                        xf_div(elemCount, accumX, accumJ, accumT);            // T = X / J    | (X * Y^2) / J
                         xf_add(elemCount, accumT, accumB, accumB);            // B += T       | ...
                     }
                     while((s32)(xf_get_exponent(elemCount, accumB) - xf_get_exponent(elemCount, accumT)) < XFLOAT_MAX_BITS(elemCount));
 
-                    xf_mul(elemCount, accumB, dst, dst);                 // Y *= B
+                    xf_mul(elemCount, accumB, dst, dst);                      // Y *= B
                     xf_naive_mul2(elemCount, dst);                            // Y <<= 1
                 }
 
@@ -408,20 +408,20 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
             u32 accum[elemCount];
 
             xf_copy(elemCount, src, accum);                                 // A = X
-            xf_div(elemCount, accum, gXF_Log2, denominator);             // D = A / LOG(2)   | X / LOG(2)
+            xf_div(elemCount, accum, gXF_Log2, denominator);                // D = A / LOG(2)   | X / LOG(2)
             xf_add(elemCount, gXF_Half, denominator, denominator);          // D += 0.5         | 0.5 + X / LOG(2)
             xf_floor(elemCount, denominator, numerator);                    // N = FLOOR(D)     | FLOOR(0.5 + X / LOG(2))
             s64 i = xf_integer_fraction(elemCount, numerator, denominator); // I = INT(N)
-            xf_mul(elemCount, gXF_Log2Upper, numerator, denominator);  // D = N * LOG(2)[high]
-            xf_sub(elemCount, accum, denominator, accum);              // A -= D
-            xf_mul(elemCount, gXF_Log2Lower, numerator, denominator);  // D = N * LOG(2)[low]
-            xf_sub(elemCount, accum, denominator, accum);              // A -= D           | X - LOG(2) * FLOOR(0.5 + X / LOG(2))
+            xf_mul(elemCount, gXF_Log2Upper, numerator, denominator);       // D = N * LOG(2)[high]
+            xf_sub(elemCount, accum, denominator, accum);                   // A -= D
+            xf_mul(elemCount, gXF_Log2Lower, numerator, denominator);       // D = N * LOG(2)[low]
+            xf_sub(elemCount, accum, denominator, accum);                   // A -= D           | X - LOG(2) * FLOOR(0.5 + X / LOG(2))
 
             xf_naive_div2(elemCount, accum);                                // A >>= 1          | X / 2
             xf_tanh(elemCount, accum, accum);                               // A = TANH(A)      | TANH(X / 2)
             xf_add(elemCount, gXF_One, accum, numerator);                   // N = 1 + A        | 1 + TANH(X / 2)
-            xf_sub(elemCount, gXF_One, accum, denominator);            // D = 1 - A        | 1 - TANH(X / 2)
-            xf_div(elemCount, numerator, denominator, dst);              // Y = N / D        | (1 + TANH(X/2)) / (1 - TANH(X/2))
+            xf_sub(elemCount, gXF_One, accum, denominator);                 // D = 1 - A        | 1 - TANH(X / 2)
+            xf_div(elemCount, numerator, denominator, dst);                 // Y = N / D        | (1 + TANH(X/2)) / (1 - TANH(X/2))
 
             i += xf_get_exponent(elemCount, dst);
             if (i > XFLOAT_MAX_EXPONENT)
@@ -500,7 +500,7 @@ xf_pow(u32 elemCount, u32 *base, u32 *power, u32 *dst)
     if (!done)
     {
         xf_log(elemCount, base, accum);                        // A = LOG(B)
-        xf_mul(elemCount, power, accum, accum);           // A *= P
+        xf_mul(elemCount, power, accum, accum);                // A *= P
         xf_exp(elemCount, accum, dst);                         // Y = EXP(A)   | e^(power * log(base))
     }
 }
@@ -635,35 +635,32 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
 {
     u32 accum1[elemCount];
     u32 accum2[elemCount];
+    u32 accum3[elemCount];
     u32 accum4[elemCount];
 
     u32 sign = xf_get_sign(elemCount, src);                                            // sign = src < 0
 
     xf_copy(elemCount, src, accum4);                                                   // vvvvvv
-    xf_make_positive(elemCount, accum4);                                               // accum4 = absolute(src);
-    /* range reduction to [0, pi/2] */
-    xf_div(elemCount, accum4, gXF_PiOver2, accum1);                                 // accum1 = accum4 / (Pi/2)
-    xf_floor(elemCount, accum1, accum4);                                               // accum4 = floor(accum1)
+    xf_make_positive(elemCount, accum4);                                               // D = ABS(X)   | |X|
+    // NOTE(michiel): Range reduction to [0, pi/2]
+    xf_div(elemCount, accum4, gXF_PiOver2, accum1);                                    // A = D/(PI/2) | |X|*2/PI
+    xf_floor(elemCount, accum1, accum4);                                               // D = FLOOR(A) | FLOOR(|X|*2/PI)
 
     /* accum2 = accum4 - 8 * floor(accum4/8) */
-    u32 exponentAccum4 = xf_get_exponent(elemCount, accum4);
-    if (exponentAccum4 >= 3)
+    u32 exponentAccum4 = xf_get_exponent(elemCount, accum4);                           // ED = EXPONENT(D)
+    s64 mod = 0;
+    if (exponentAccum4 > 3)                                                           // (D / 8) > 0
     {
-        xf_set_exponent(elemCount, accum4, exponentAccum4 - 3);
-        xf_floor(elemCount, accum4, accum2);
-        xf_set_exponent(elemCount, accum2, xf_get_exponent(elemCount, accum2) + 3);
-        xf_set_exponent(elemCount, accum4, exponentAccum4);
-        xf_sub(elemCount, accum4, accum2, accum2);
-    }
-    else
-    {
-        xf_copy(elemCount, accum4, accum2);
+        xf_set_exponent(elemCount, accum4, exponentAccum4 - 3);                        // D /= 2^3     | D / 8
+        xf_floor(elemCount, accum4, accum2);                                           // B = FLOOR(D)
+        xf_set_exponent(elemCount, accum2, xf_get_exponent(elemCount, accum2) + 3);    // B *= 2^3     | B * 8
+        xf_set_exponent(elemCount, accum4, exponentAccum4);                            // D *= 2^3     | D * 8
+        xf_sub(elemCount, accum4, accum2, accum2);                                     // B = D - B    | D - 8*FLOOR(D/8)
+        mod = xf_integer_fraction(elemCount, accum2, accum2);                          // M = INT(B)   | INT(D - 8*FLOOR(D/8))
     }
 
-    s64 mod = xf_integer_fraction(elemCount, accum2, accum2);
-
-    xf_sub(elemCount, accum1, accum4, accum2);
-    xf_mul(elemCount, accum2, gXF_PiOver2, accum4);
+    xf_sub(elemCount, accum1, accum4, accum2);                                         // B = A - D    | A - FLOOR(A)
+    xf_mul(elemCount, accum2, gXF_PiOver2, accum4);                                    // D = B * PI/2 | (|X|*2/PI - FLOOR(|X|*2/PI)) * PI/2
 
     mod &= 3;
     if (mod > 1)
@@ -672,30 +669,30 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
     }
     if (mod & 1)
     {
-        xf_sub(elemCount, gXF_PiOver2, accum4, accum4); /* accum4 = 1 - accum4 */
+        xf_sub(elemCount, gXF_PiOver2, accum4, accum4);   // D = PI/2 - D     | D = 1 - D
     }
 
-    u32 accum3[elemCount];
-    xf_mul(elemCount, accum4, accum4, accum3);
-    xf_negate(elemCount, accum3);
+    xf_mul(elemCount, accum4, accum4, accum3);            // C = D * D
+    xf_negate(elemCount, accum3);                         // C = -C           | -(D^2)
 
-    xf_copy(elemCount, gXF_One, accum1);
-    xf_copy(elemCount, gXF_One, accum2);
-    xf_copy(elemCount, gXF_One, dst);
+    xf_copy(elemCount, gXF_One, accum1);                  // A = 1
+    xf_copy(elemCount, gXF_One, accum2);                  // B = 1
+    xf_copy(elemCount, gXF_One, dst);                     // Y = 1
 
     /* power series */
+    // NOTE(michiel): Y = 1 - C^2/3! + C^4/5! - C^6/7! + ...
     do
     {
-        xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1      */
-        xf_div(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
-        xf_add(elemCount, gXF_One, accum1, accum1);     /* accum1 += 1 */
-        xf_div(elemCount, accum2, accum1, accum2);   /* accum2 /= accum1 */
-        xf_mul(elemCount, accum3, accum2, accum2); /* accum2 *= accum3 */
-        xf_add(elemCount, accum2, dst, dst);            /* dst += accum2 */
+        xf_add(elemCount, gXF_One, accum1, accum1);       // ++A              | A + 1
+        xf_div(elemCount, accum2, accum1, accum2);        // B /= A           | B / (A + 1)
+        xf_add(elemCount, gXF_One, accum1, accum1);       // ++A              | A + 2
+        xf_div(elemCount, accum2, accum1, accum2);        // B /= A           | B / (A + 1)*(A + 2)
+        xf_mul(elemCount, accum3, accum2, accum2);        // B *= C           | BC / (A + 1)*(A + 2)
+        xf_add(elemCount, accum2, dst, dst);              // Y += B           | + ... + ...
     }
     while((s32)(xf_get_exponent(elemCount, dst) - xf_get_exponent(elemCount, accum2)) <= XFLOAT_MAX_BITS(elemCount));
 
-    xf_mul(elemCount, accum4, dst, dst);
+    xf_mul(elemCount, accum4, dst, dst);                  // Y *= D           | D - D^3/3! + D^5/5! - D^7/7! + ...
 
     if (sign)
     {
@@ -706,6 +703,8 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_cos(u32 elemCount, u32 *src, u32 *dst)
 {
+    // TODO(michiel): Nicer func (full approx)?
+    // NOTE(michiel): cos(x) = sin(pi/2 - x)
     xf_sub(elemCount, gXF_PiOver2, src, dst);
     xf_sin(elemCount, dst, dst);
 }
@@ -716,40 +715,51 @@ xf_tan(u32 elemCount, u32 *src, u32 *dst)
     u32 accumX3[elemCount];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumX3);
-    xf_make_positive(elemCount, accumX3);
+    xf_make_positive(elemCount, accumX3);               // X3 = |X|
 
     // NOTE(michiel): Range reduction to +/- pi/2
     u32 accumE[elemCount];
-    xf_add(elemCount, accumX3, gXF_PiOver2, accumE);
-    xf_div(elemCount, accumE, gXF_Pi, accumE);
-    xf_floor(elemCount, accumE, accumE);
-    xf_mul(elemCount, accumE, gXF_Pi, accumE);
-    xf_sub(elemCount, accumX3, accumE, accumX3);
+    xf_add(elemCount, accumX3, gXF_PiOver2, accumE);    // E = X3 + PI/2    | |X| + PI/2
+    xf_div(elemCount, accumE, gXF_Pi, accumE);          // E /= PI          | (|X| + PI/2) / PI
+    xf_floor(elemCount, accumE, accumE);                // E = FLOOR(E)     | FLOOR((|X| + PI/2) / PI)
+    xf_mul(elemCount, accumE, gXF_Pi, accumE);          // E *= PI          | FLOOR((|X| + PI/2) / PI) * PI
+    xf_sub(elemCount, accumX3, accumE, accumX3);        // X3 -= E          | |X| - FLOOR((|X| + PI/2) / PI) * PI
 
     u32 accumJ[elemCount];
     u32 n = XFLOAT_MAX_BITS(elemCount) / 8;
     s64 li = 2 * n + 1;
-    xf_from_s64(elemCount, li, accumJ);
-    xf_copy(elemCount, accumJ, accumE);
+    xf_from_s64(elemCount, li, accumJ);                 // J = 2N + 1
+    xf_copy(elemCount, accumJ, accumE);                 // E = J
 
+    // NOTE(michiel): REDUCED(X) = |X| - FLOOR((|X| + PI/2) / PI) * PI
     u32 accumX2[elemCount];
-    xf_mul(elemCount, accumX3, accumX3, accumX2);
-    xf_negate(elemCount, accumX2);
+    xf_mul(elemCount, accumX3, accumX3, accumX2);       // X2 = X3*X3       | REDUCED(X)^2
+    xf_negate(elemCount, accumX2);                      // X2 = -X2         | -(REDUCED(X)^2)
 
     // NOTE(michiel): Continued fraction expansion
+    // -x^2/(-x^2/(-x^2/(... + 7) + 5) + 3) + 1
     u32 accumR[elemCount];
     for (u32 i = 0; i < n; ++i)
     {
-        xf_div(elemCount, accumX2, accumE, accumR);
-        xf_sub(elemCount, accumJ, gXF_Two, accumJ);
-        xf_add(elemCount, accumR, accumJ, accumE);
+        xf_div(elemCount, accumX2, accumE, accumR);     // R = X2 / E       | -(X^2) / (...)
+        xf_sub(elemCount, accumJ, gXF_Two, accumJ);     // J -= 2           | 2*(N - i) - 1
+        xf_add(elemCount, accumR, accumJ, accumE);      // E = R + J        | -(X^2) / (...) + 2*(N - i) - 1
     }
 
-    xf_div(elemCount, accumX3, accumE, dst);
+    xf_div(elemCount, accumX3, accumE, dst);            // Y = X3 / E       | REDUCED(X) / E
     if (sign)
     {
         xf_negate(elemCount, dst);
     }
+}
+
+internal void
+xf_cot(u32 elemCount, u32 *src, u32 *dst)
+{
+    // TODO(michiel): Nicer func (full approx)?
+    // NOTE(michiel): cot(x) = 1 / tan(x)
+    xf_tan(elemCount, src, dst);
+    xf_div(elemCount, gXF_One, dst, dst);
 }
 
 internal void

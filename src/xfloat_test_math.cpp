@@ -548,7 +548,8 @@ int main(int argc, char **argv)
     //test_log(&env, ELEMENT_COUNT);
     //test_exp(&env, ELEMENT_COUNT);
     //test_pow(&env, ELEMENT_COUNT);
-    test_sincos(&env, ELEMENT_COUNT);
+    //test_sincos(&env, ELEMENT_COUNT);
+    test_tancot(&env, ELEMENT_COUNT);
 
     return 0;
 }

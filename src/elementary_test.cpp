@@ -1564,7 +1564,6 @@ test_sincos(Environment *env, u32 elemCount)
     xf_from_s32(elemCount, env->minExp, EXPON);
     xf_from_f32(elemCount, 0.75f, X);
     xf_mul(elemCount, X, EXPON, EXPON);
-
     xf_pow(elemCount, gXF_Two, EXPON, X);
     xf_sin(elemCount, X, Y);
     fprintf(stdout, "sin(");
@@ -1610,4 +1609,326 @@ test_sincos(Environment *env, u32 elemCount)
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of sin/cos\n\n");
+}
+
+global String gTan11Fraction = static_string("0.9508464541951420257954832034531539516575098851311946310945881123661134104031654779989090875181672217233308822265082444677196937143193893426065148170417169441360752810352819635165893207630835309928699271953564327191966650623295663931499462491032676940456029120591388467964276901349435046331686140473021208667557700088944601073338960611827896379185288648924496562849281424574051006181018365689216220850954935450628914569262072859566649852728224365514201600888424246180522379527040303562592501755293425549205811756632002073239601692021469745769115251021322526574982191452687125405094639552969762003711001407400895767183275749190156893686935406007954770336613005330021472674834397142120385652261415713901224992215958650572846727110042457281785624822533459947082363810620609474626728556970630376157078590618628438046436611289060068327529424792559961054368938015539874139567289508604663993328637017805164672360545757520312616985257518067459231068740291033264624803396110227163746301891564542908956044661365347292452899842238269280292330337549334320277554154276021047469247255103385746387385197352225082901808074125723842175298558016470675037220064839467983723688870356566876210812840695318728873803474854648685626234022418474591517401173316511119320341043020716793644013078201675032368547309397813256895510442114346573658387766478031139033200631703089368522000973194949760970506120819017015064484610316046050213287267905217592664567121875029698804760777834296475555345921650224442572926122564679917783299646401607924167768553311592278066995513346767965081177969650841400883057572855455493922835636978554084570665981098504324172730829546385195222698314201827996592013007257367949979429935980528140471292257607809581729125557023129381730337718815632159701329525488266514862740810884445154125471240266511839009130296753042100067");
+
+internal void
+test_tancot(Environment *env, u32 elemCount)
+{
+    u64 timeRand = time(NULL);
+    fprintf(stdout, "test_tancot: time rand %lu\n", timeRand);
+    RandomSeriesPCG series_ = random_seed_pcg(timeRand, 182546891254ULL);
+    RandomSeriesPCG *series = &series_;
+
+    u32 BETA[elemCount];
+    xf_copy(elemCount, gXF_Two, BETA);
+
+    u32 ALBETA[elemCount];
+    xf_copy(elemCount, gXF_Log2, ALBETA);
+
+    u32 AIT[elemCount];
+    xf_from_s32(elemCount, env->iT, AIT);
+
+    u32 A[elemCount];
+    u32 B[elemCount];
+    xf_clear(elemCount, A);
+    xf_copy(elemCount, gXF_PiOver2, B);
+    xf_naive_div2(elemCount, B);            // PI / 4
+
+    u32 N = 2000;
+    u32 XN[elemCount];
+    xf_from_s32(elemCount, N, XN);
+
+    // NOTE(michiel): Random argument accuracy tests
+    u32 X1[elemCount];
+    u32 R6[elemCount];
+    u32 R7[elemCount];
+    u32 DEL[elemCount];
+    u32 XL[elemCount];
+
+    u32 X[elemCount];
+    u32 Y[elemCount];
+    u32 Z[elemCount];
+    u32 ZZ[elemCount];
+    u32 W[elemCount];
+
+    for (u32 j = 0; j < 4; ++j)
+    {
+        u32 K1 = 0;
+        u32 K3 = 0;
+        xf_clear(elemCount, X1);
+        xf_clear(elemCount, R6);
+        xf_clear(elemCount, R7);
+        xf_sub(elemCount, B, A, DEL);
+        xf_div(elemCount, DEL, XN, DEL);
+        xf_copy(elemCount, A, XL);
+
+        for (u32 i = 0; i < N; ++i)
+        {
+            xf_random_unilateral(series, elemCount, X);
+            xf_mul(elemCount, DEL, X, X);
+            xf_add(elemCount, X, XL, X);
+
+            xf_mul(elemCount, X, gXF_Half, Y);
+            xf_add(elemCount, Y, Y, X);
+
+            if (j < 3)
+            {
+                xf_tan(elemCount, X, Z);
+                xf_tan(elemCount, Y, ZZ);
+                if (xf_compare(elemCount, Z, gXF_Zero))   // Z != 0         | TAN(X) != 0
+                {
+                    xf_sub(elemCount, gXF_Half, ZZ, Y);   // Y = 0.5 - ZZ
+                    xf_add(elemCount, gXF_Half, Y, Y);    // Y += 0.5       | (0.5-ZZ)+0.5
+                    xf_add(elemCount, gXF_Half, ZZ, W);   // W = 0.5 + ZZ
+                    xf_add(elemCount, gXF_Half, W, W);    // W += 0.5       | (0.5+ZZ)+0.5
+                    xf_mul(elemCount, Y, W, W);           // W *= Y         | ((0.5-ZZ)+0.5) + ((0.5+ZZ)+0.5)
+
+                    xf_add(elemCount, ZZ, ZZ, Y);         // Y = ZZ + ZZ
+                    xf_div(elemCount, Y, W, W);           // W = Y / W      | (ZZ+ZZ)/W
+                    xf_sub(elemCount, Z, W, W);           // W = Z - W      | Z - (ZZ+ZZ)/W
+                    xf_div(elemCount, W, Z, W);           // W /= Z         | (Z - (ZZ+ZZ)/W) / Z
+                }
+                else
+                {
+                    xf_copy(elemCount, gXF_One, W);
+                }
+            }
+            else
+            {
+                xf_cot(elemCount, X, Z);
+                xf_cot(elemCount, Y, ZZ);
+
+                if (xf_compare(elemCount, Z, gXF_Zero))   // Z != 0         | COTAN(X) != 0
+                {
+                    xf_sub(elemCount, gXF_Half, ZZ, Y);   // Y = 0.5 - ZZ
+                    xf_add(elemCount, gXF_Half, Y, Y);    // Y += 0.5       | (0.5-ZZ)+0.5
+                    xf_add(elemCount, gXF_Half, ZZ, W);   // W = 0.5 + ZZ
+                    xf_add(elemCount, gXF_Half, W, W);    // W += 0.5       | (0.5+ZZ)+0.5
+                    xf_mul(elemCount, Y, W, W);           // W *= Y         | ((0.5-ZZ)+0.5) + ((0.5+ZZ)+0.5)
+
+                    xf_add(elemCount, ZZ, ZZ, Y);         // Y = ZZ + ZZ
+                    xf_div(elemCount, W, Y, W);           // W /= Y         | W/(ZZ+ZZ)
+                    xf_add(elemCount, Z, W, W);           // W += Z         | Z + W/(ZZ+ZZ)
+                    xf_div(elemCount, W, Z, W);           // W /= Z         | (Z + W/(ZZ+ZZ)) / Z
+                }
+                else
+                {
+                    xf_copy(elemCount, gXF_One, W);
+                }
+            }
+
+            s32 compare0 = xf_compare(elemCount, W, gXF_Zero);
+            if (compare0 > 0) // W > 0
+            {
+                ++K1;
+            }
+            if (compare0 < 0) // W < 0
+            {
+                ++K3;
+            }
+
+            xf_absolute(elemCount, W);
+
+            if (xf_compare(elemCount, R6, W) < 0) // R6 < W
+            {
+                xf_copy(elemCount, W, R6);
+                xf_copy(elemCount, X, X1);
+            }
+            xf_mul(elemCount, W, W, W);
+            xf_add(elemCount, R7, W, R7);
+            xf_add(elemCount, XL, DEL, XL);
+        }
+
+        u32 K2 = N - K3 - K1;
+        xf_div(elemCount, R7, XN, R7);
+        xf_square_root(elemCount, R7, R7);
+
+        if (j < 3)
+        {
+            fprintf(stdout, "\nTest of tan(X) VS 2*tan(X/2)/(1-tan(X/2)^2)\n");
+        }
+        else
+        {
+            fprintf(stdout, "\nTest of cot(X) VS (cot(X/2)^2-1)/(2*cot(X/2))\n");
+        }
+
+        fprintf(stdout, "%u random arguments were tested from the interval (", N);
+        xf_print(elemCount, A, 4);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, B, 4);
+        fprintf(stdout, ")\n");
+
+        if (j < 3)
+        {
+            fprintf(stdout, "tan(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+        else
+        {
+            fprintf(stdout, "cot(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+
+        fprintf(stdout, "There are %u base 2 significant digits in a floating-point number.\n", env->iT);
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R6, gXF_Zero)) // R6 != 0
+        {
+            xf_copy(elemCount, R6, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The maximum relative error of ");
+        xf_print(elemCount, R6, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, " occured for X = ");
+        xf_print(elemCount, X1, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R7, gXF_Zero)) // R7 != 0
+        {
+            xf_copy(elemCount, R7, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The root mean square relative error was ");
+        xf_print(elemCount, R7, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        if (j == 0)
+        {
+            xf_from_f32(elemCount, 0.875f, A);
+            xf_mul(elemCount, A, gXF_Pi, A);
+            xf_from_f32(elemCount, 1.125f, B);
+            xf_mul(elemCount, B, gXF_Pi, B);
+        }
+        else
+        {
+            xf_mul(elemCount, gXF_Six, gXF_Pi, A);
+            xf_copy(elemCount, gXF_PiOver2, B);
+            xf_naive_div2(elemCount, B);
+            xf_add(elemCount, A, B, B);
+        }
+    }
+
+    // NOTE(michiel): Special tests
+    fprintf(stdout, "\nSpecial tests\n");
+
+    fprintf(stdout, "The identity tan(-X) = -tan(X) will be tested\n");
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_random_unilateral(series, elemCount, X);
+        xf_mul(elemCount, X, A, X);
+        xf_tan(elemCount, X, Z);
+        xf_negate(elemCount, X);
+        xf_tan(elemCount, X, Y);
+        xf_negate(elemCount, X);
+        xf_add(elemCount, Z, Y, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+    }
+
+    fprintf(stdout, "\nThe identity tan(X) = X, for small X, will be tested\n");
+    u32 BETAP[elemCount];
+    xf_copy(elemCount, gXF_One, BETAP);
+    xf_set_exponent(elemCount, BETAP, XFLOAT_EXP_BIAS + env->iT);
+    xf_random_unilateral(series, elemCount, X);
+    xf_div(elemCount, X, BETAP, X);
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_tan(elemCount, X, Z);
+        xf_sub(elemCount, X, Z, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+        xf_div(elemCount, X, gXF_Two, X);
+    }
+
+    fprintf(stdout, "\nTest of underflow for very small arguments\n");
+    u32 EXPON[elemCount];
+    xf_from_s32(elemCount, env->minExp, EXPON);
+    xf_from_f32(elemCount, 0.75f, X);
+    xf_mul(elemCount, X, EXPON, EXPON);
+    xf_pow(elemCount, gXF_Two, EXPON, X);
+    xf_tan(elemCount, X, Y);
+    fprintf(stdout, "tan(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    u32 tan11_C0[elemCount];
+    u32 tan11_C1[elemCount];
+    xf_from_s32(elemCount, 225, tan11_C0);
+    xf_negate(elemCount, tan11_C0);
+    xf_from_string(elemCount, gTan11Fraction, tan11_C1);
+    xf_negate(elemCount, tan11_C1);
+    xf_from_s32(elemCount, 11, X);
+    xf_tan(elemCount, X, Y);
+    xf_sub(elemCount, tan11_C0, Y, W);
+    xf_add(elemCount, W, tan11_C1, W);
+    xf_add(elemCount, tan11_C0, tan11_C1, A);
+    xf_div(elemCount, W, A, W);
+    xf_copy(elemCount, W, Z);
+    xf_absolute(elemCount, Z);
+    xf_log(elemCount, Z, Z);
+    xf_div(elemCount, Z, ALBETA, Z);
+    fprintf(stdout, "\nThe relative error in tan(11) is ");
+    xf_print(elemCount, W, 7);
+    fprintf(stdout, " = 2^");
+    xf_print(elemCount, Z, 4);
+    fprintf(stdout, "\ntan(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    xf_add(elemCount, AIT, Z, W);
+    xf_maximum(elemCount, W, gXF_Zero, W);
+    fprintf(stdout, "The estimated loss of base 2 significant digits is "); // 1022
+    xf_print(elemCount, W, 4);
+    fprintf(stdout, "\n");
+
+    // NOTE(michiel): Error tests
+    fprintf(stdout, "\nTest of errors\n"); // 1050
+    xf_naive_div2(elemCount, AIT);
+    xf_pow(elemCount, gXF_Two, AIT, X);
+    fprintf(stdout, "tan() will be called with the argument ");
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, "\n"); // no error
+    xf_tan(elemCount, X, Y);
+    fprintf(stdout, "tan returned the value ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+    xf_copy(elemCount, BETAP, X);
+    fprintf(stdout, "tan() will be called with the argument ");
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, "\n"); // error
+    xf_tan(elemCount, X, Y);
+    fprintf(stdout, "tan returned the value ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "\nThis concludes the tests of tan/cot\n\n"); // 1100
 }

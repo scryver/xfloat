@@ -18,6 +18,7 @@ internal void   xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst);
 internal void   xf_sin(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_cos(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_tan(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_cot(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_asin(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_acos(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_atan(u32 elemCount, u32 *src, u32 *dst);
