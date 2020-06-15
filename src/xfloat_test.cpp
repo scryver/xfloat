@@ -944,6 +944,14 @@ s32 main(s32 argc, char **argv)
     aStr = string_from_xf(elemCount, a, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  err sqrt(pi) = %.*s\n", STR_FMT(aStr));
 
+    f32 af = f32_from_xf(elemCount, gXF_Pi);
+    fprintf(stdout, "  pi = %f\n", af);
+
+    af = f32_from_xf(elemCount, gXF_Two);
+    fprintf(stdout, "  2 = %f\n", af);
+
+    af = f32_from_xf(elemCount, &gXF_Tenths[0][0]);
+    fprintf(stdout, "  0.1 = %f\n", af);
 
     return 0;
 }

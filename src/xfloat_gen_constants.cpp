@@ -30,6 +30,10 @@ global u32 *gXF_Two;
 global u32 *gXF_Three;
 global u32 *gXF_Four;
 global u32 *gXF_Five;
+global u32 *gXF_Six;
+global u32 *gXF_Seven;
+global u32 *gXF_Eight;
+global u32 *gXF_Nine;
 global u32 *gXF_NegativeTwo;
 global u32 *gXF_Sqrt2;
 global u32 *gXF_Pi;
@@ -303,6 +307,28 @@ s32 main(s32 argc, char **argv)
     gXF_Five = allocate_array(u32, elemCount);
     xf_add(elemCount, gXF_Four, gXF_One, gXF_Five);
     generate_named_value(fileOutput, elemCount, string("5.0e0"), gXF_Five);
+
+    // NOTE(michiel): Print 6.0
+    gXF_Six = allocate_array(u32, elemCount);
+    xf_copy(elemCount, gXF_Three, gXF_Six);
+    xf_naive_mul2(elemCount, gXF_Six);
+    generate_named_value(fileOutput, elemCount, string("6.0e0"), gXF_Six);
+
+    // NOTE(michiel): Print 7.0
+    gXF_Seven = allocate_array(u32, elemCount);
+    xf_add(elemCount, gXF_Six, gXF_One, gXF_Seven);
+    generate_named_value(fileOutput, elemCount, string("7.0e0"), gXF_Seven);
+
+    // NOTE(michiel): Print 8.0
+    gXF_Eight = allocate_array(u32, elemCount);
+    xf_copy(elemCount, gXF_Four, gXF_Eight);
+    xf_naive_mul2(elemCount, gXF_Eight);
+    generate_named_value(fileOutput, elemCount, string("8.0e0"), gXF_Eight);
+
+    // NOTE(michiel): Print 9.0
+    gXF_Nine = allocate_array(u32, elemCount);
+    xf_add(elemCount, gXF_Eight, gXF_One, gXF_Nine);
+    generate_named_value(fileOutput, elemCount, string("9.0e0"), gXF_Nine);
 
     // NOTE(michiel): Print -2.0
     gXF_NegativeTwo = allocate_array(u32, elemCount);

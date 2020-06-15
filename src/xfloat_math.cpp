@@ -663,18 +663,12 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
     s64 mod = xf_integer_fraction(elemCount, accum2, accum2);
 
     xf_sub(elemCount, accum1, accum4, accum2);
-#if 1
     xf_mul(elemCount, accum2, gXF_PiOver2, accum4);
-#else
-    xf_multiply(elemCount, accum2, gXF_PiOver2Upper, accum4);
-    xf_multiply(elemCount, accum2, gXF_PiOver2Lower, accum2);
-    xf_add(elemCount, accum2, accum4, accum4);
-#endif
 
     mod &= 3;
     if (mod > 1)
     {
-        sign = XFLOAT_SIGN_MASK;
+        sign ^= XFLOAT_SIGN_MASK;
     }
     if (mod & 1)
     {
@@ -699,12 +693,14 @@ xf_sin(u32 elemCount, u32 *src, u32 *dst)
         xf_mul(elemCount, accum3, accum2, accum2); /* accum2 *= accum3 */
         xf_add(elemCount, accum2, dst, dst);            /* dst += accum2 */
     }
-    while((s32)(xf_get_exponent(elemCount, dst) - xf_get_exponent(elemCount, accum2)) < XFLOAT_MAX_BITS(elemCount));
+    while((s32)(xf_get_exponent(elemCount, dst) - xf_get_exponent(elemCount, accum2)) <= XFLOAT_MAX_BITS(elemCount));
 
     xf_mul(elemCount, accum4, dst, dst);
 
-    dst[XFLOAT_SIGN_EXP_IDX] &= ~XFLOAT_SIGN_MASK;
-    dst[XFLOAT_SIGN_EXP_IDX] |= sign;
+    if (sign)
+    {
+        xf_make_negative(elemCount, dst);
+    }
 }
 
 internal void

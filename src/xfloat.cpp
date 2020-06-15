@@ -1408,7 +1408,6 @@ xf_from_s32(u32 elemCount, s32 s, u32 *x)
     }
 }
 
-// TODO(michiel): Check this, never ran, and still not sure how to attack the problem.
 internal void
 xf_from_s64(u32 elemCount, s64 s, u32 *x)
 {
@@ -1446,6 +1445,93 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
             xf_set_exponent(elemCount, x, exponent - shiftCount);
         }
     }
+}
+
+internal f32
+f32_from_xf(u32 elemCount, u32 *x)
+{
+    u32 sign = xf_get_sign(elemCount, x);
+    s32 exp = xf_unbiased_exponent(elemCount, x);
+    u32 mantissa = x[XFLOAT_MANTISSA_IDX + 1];
+    if ((exp > -127) && (exp < 128))
+    {
+        mantissa &= 0x7FFFFFFF; // NOTE(michiel): First bit is implied
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        exp += 126;
+    }
+    else if (exp <= -127)
+    {
+        if (exp > (-127 - 23))
+        {
+            // TODO(michiel): Denormals
+            mantissa = 0;
+            exp = 0;
+        }
+        else
+        {
+            // NOTE(michiel): Zero
+            mantissa = 0;
+            exp = 0;
+        }
+    }
+    else
+    {
+        // NOTE(michiel): Infinite
+        mantissa = 0;
+        exp = 0xFF;
+    }
+
+    u32 result = (((sign << 31) & F32_SIGN_MASK) |
+                  ((exp  << 23) & F32_EXP_MASK)  |
+                  (mantissa & F32_FRAC_MASK));
+    return *(f32 *)&result;
+}
+
+internal f64
+f64_from_xf(u32 elemCount, u32 *x)
+{
+    u64 sign = (u64)xf_get_sign(elemCount, x) << 32;
+    s64 exp = xf_unbiased_exponent(elemCount, x);
+    u64 mantissa = (((u64)x[XFLOAT_MANTISSA_IDX + 1] << 32) |
+                    ((u64)x[XFLOAT_MANTISSA_IDX + 2]));
+    if ((exp > -1023) && (exp < 1025))
+    {
+        mantissa &= 0x7FFFFFFFFFFFFFFF; // NOTE(michiel): First bit is implied
+        exp += 1023;
+    }
+    else if (exp <= -1023)
+    {
+        if (exp > (-1023 - 52))
+        {
+            // TODO(michiel): Denormals
+            mantissa = 0;
+            exp = 0;
+        }
+        else
+        {
+            // NOTE(michiel): Zero
+            mantissa = 0;
+            exp = 0;
+        }
+    }
+    else
+    {
+        // NOTE(michiel): Infinite
+        mantissa = 0;
+        exp = 0x7FF;
+    }
+
+    u64 result = (((sign << 63) & F64_SIGN_MASK) |
+                  ((exp  << 52) & F64_EXP_MASK)  |
+                  (mantissa & F64_FRAC_MASK));
+    return *(f64 *)&result;
 }
 
 internal void

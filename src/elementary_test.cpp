@@ -3,6 +3,9 @@ struct Environment
     // NOTE(michiel): iBeta is presumed to be 2
     u32 iT;
 
+    s32 minExp; // NOTE(michiel): Unbiased!
+    s32 maxExp;
+
     u32 *eps;
     u32 *epsNeg;
     u32 *xMin;
@@ -17,6 +20,9 @@ init_environment(Environment *env, u32 elemCount, Arena *arena)
     env->epsNeg = arena_allocate_array(arena, u32, elemCount);
     env->xMin = arena_allocate_array(arena, u32, elemCount);
     env->xMax = arena_allocate_array(arena, u32, elemCount);
+
+    env->minExp = 1 - (s32)XFLOAT_EXP_BIAS;
+    env->maxExp = (s32)XFLOAT_MAX_EXPONENT - (s32)XFLOAT_EXP_BIAS - 1;
 
 #if 1
     xf_copy(elemCount, gXF_One, env->eps);
@@ -283,7 +289,7 @@ test_square_root(Environment *env, u32 elemCount)
     xf_print(elemCount, Y);
     fprintf(stdout, "\n");
 
-    fprintf(stdout, "\nThis concludes the tests\n\n");
+    fprintf(stdout, "\nThis concludes the tests of square_root\n\n");
 }
 
 internal void
@@ -618,7 +624,7 @@ test_log(Environment *env, u32 elemCount)
     xf_print(elemCount, Y);
     fprintf(stdout, "\n");
 
-    fprintf(stdout, "\nThis concludes the tests\n\n");
+    fprintf(stdout, "\nThis concludes the tests of log\n\n");
 }
 
 // NOTE(michiel): |e^(-1/16) - 1|
@@ -687,9 +693,9 @@ test_exp(Environment *env, u32 elemCount)
     {
         u32 K1 = 0;
         u32 K3 = 0;
-        xf_copy(elemCount, gXF_Zero, X1);
-        xf_copy(elemCount, gXF_Zero, R6);
-        xf_copy(elemCount, gXF_Zero, R7);
+        xf_clear(elemCount, X1);
+        xf_clear(elemCount, R6);
+        xf_clear(elemCount, R7);
         xf_sub(elemCount, B, A, DEL);
         xf_div(elemCount, DEL, XN, DEL);
         xf_copy(elemCount, A, XL);
@@ -775,7 +781,6 @@ test_exp(Environment *env, u32 elemCount)
             xf_log(elemCount, W, W);
             xf_div(elemCount, W, ALBETA, W);
         }
-        //fprintf(stdout, 1021, R6, 2, W, X1);
         fprintf(stdout, "The maximum relative error of ");
         xf_print(elemCount, R6, 4);
         fprintf(stdout, " = 2^");
@@ -784,7 +789,6 @@ test_exp(Environment *env, u32 elemCount)
         xf_print(elemCount, X1, 4);
         fprintf(stdout, "\n");
 
-        //fprintf(stdout, 1022, 2, W);
         xf_add(elemCount, AIT, W, W);
         xf_maximum(elemCount, W, gXF_Zero, W);
         fprintf(stdout, "The estimated loss of base 2 significant digits is ");
@@ -799,14 +803,12 @@ test_exp(Environment *env, u32 elemCount)
             xf_log(elemCount, W, W);
             xf_div(elemCount, W, ALBETA, W);
         }
-        //fprintf(stdout, 1023, R7, 2, W);
         fprintf(stdout, "The root mean square relative error was ");
         xf_print(elemCount, R7, 4);
         fprintf(stdout, " = 2^");
         xf_print(elemCount, W, 4);
         fprintf(stdout, "\n");
 
-        //fprintf(stdout, 1022, 2, W);
         xf_add(elemCount, AIT, W, W);
         xf_maximum(elemCount, W, gXF_Zero, W);
         fprintf(stdout, "The estimated loss of base 2 significant digits is ");
@@ -839,7 +841,7 @@ test_exp(Environment *env, u32 elemCount)
 
     // NOTE(michiel): Special tests
     fprintf(stdout, "\nSpecial tests\n");
-    fprintf(stdout, "The identity exp(X)*exp(-X) = 1.0 will be tested\n");
+    fprintf(stdout, "The identity exp(X)*exp(-X) = 1.0 will be tested\n"); //  (X, id-1.0)
 
     for (u32 i = 0; i < 5; ++i)
     {
@@ -917,5 +919,695 @@ test_exp(Environment *env, u32 elemCount)
     xf_print(elemCount, Y);
     fprintf(stdout, "\n");
 
-    fprintf(stdout, "\nThis concludes the tests\n\n");
+    fprintf(stdout, "\nThis concludes the tests of exp\n\n");
+}
+
+internal void
+test_pow(Environment *env, u32 elemCount)
+{
+    u64 timeRand = time(NULL);
+    fprintf(stdout, "test_pow: time rand %lu\n", timeRand);
+    RandomSeriesPCG series_ = random_seed_pcg(timeRand, 9186256958162984ULL);
+    RandomSeriesPCG *series = &series_;
+
+    u32 BETA[elemCount];
+    xf_copy(elemCount, gXF_Two, BETA);
+
+    u32 ALBETA[elemCount];
+    xf_copy(elemCount, gXF_Log2, ALBETA);
+
+    u32 AIT[elemCount];
+    xf_from_s32(elemCount, env->iT, AIT);
+
+    u32 ALXMAX[elemCount];
+    xf_log(elemCount, env->xMax, ALXMAX);
+
+    u32 ONEP5[elemCount];
+    xf_div(elemCount, gXF_Three, gXF_Two, ONEP5);
+
+    u32 SCALE[elemCount];
+    xf_copy(elemCount, gXF_One, SCALE);
+
+    for (u32 i = 0; i < (env->iT + 1) / 2; ++i)
+    {
+        xf_mul(elemCount, SCALE, BETA, SCALE);
+    }
+
+    u32 A[elemCount];
+    u32 B[elemCount];
+    u32 C[elemCount];
+
+    xf_log(elemCount, env->xMin, C);
+    xf_negate(elemCount, C);
+    xf_maximum(elemCount, C, ALXMAX, C);
+    xf_negate(elemCount, C);
+
+    xf_from_f32(elemCount, 100.0f, A);
+    xf_log(elemCount, A, A);
+
+    xf_div(elemCount, C, A, C);      // C = -max(ALXMAX, -log(XMIN))/log(100.0)
+    xf_copy(elemCount, gXF_Half, A);
+    xf_copy(elemCount, gXF_One, B);
+
+    u32 DELY[elemCount];
+    xf_copy(elemCount, C, DELY);
+    xf_negate(elemCount, DELY);
+    xf_sub(elemCount, DELY, C, DELY); // DELY = -C - C
+
+    u32 N = 2000;
+    u32 XN[elemCount];
+    xf_from_s32(elemCount, N, XN);
+
+    u32 Y1[elemCount];
+    xf_clear(elemCount, Y1);
+
+    // NOTE(michiel): Random argument accuracy tests
+    u32 X1[elemCount];
+    u32 R6[elemCount];
+    u32 R7[elemCount];
+    u32 DEL[elemCount];
+    u32 XL[elemCount];
+
+    u32 X[elemCount];
+    u32 XSQ[elemCount];
+    u32 Y[elemCount];
+    u32 Y2[elemCount];
+    u32 Z[elemCount];
+    u32 ZZ[elemCount];
+    u32 W[elemCount];
+
+    for (u32 j = 0; j < 4; ++j)
+    {
+        u32 K1 = 0;
+        u32 K3 = 0;
+        xf_clear(elemCount, X1);
+        xf_clear(elemCount, R6);
+        xf_clear(elemCount, R7);
+        xf_sub(elemCount, B, A, DEL);
+        xf_div(elemCount, DEL, XN, DEL);
+        xf_copy(elemCount, A, XL);
+
+        for (u32 i = 0; i < N; ++i)
+        {
+            xf_random_unilateral(series, elemCount, X);
+            xf_mul(elemCount, DEL, X, X);
+            xf_add(elemCount, X, XL, X);
+
+            if (j == 0)
+            {
+                xf_pow(elemCount, X, gXF_One, ZZ);
+                xf_copy(elemCount, X, Z);
+            }
+            else
+            {
+                xf_mul(elemCount, SCALE, X, W);
+                xf_add(elemCount, X, W, X);
+                xf_sub(elemCount, X, W, X); // NOTE(michiel): Input sanitization (clear lowest bits if needed)
+                xf_mul(elemCount, X, X, XSQ);
+
+                if (j != 3)
+                {
+                    xf_pow(elemCount, XSQ, ONEP5, ZZ);
+                    xf_mul(elemCount, X, XSQ, Z);
+                }
+                else
+                {
+                    xf_random_unilateral(series, elemCount, Y);
+                    xf_mul(elemCount, DELY, Y, Y);
+                    xf_add(elemCount, Y, C, Y);
+                    xf_div(elemCount, Y, gXF_Two, Y2);
+                    xf_add(elemCount, Y2, Y, Y2);
+                    xf_sub(elemCount, Y2, Y, Y2); // NOTE(michiel): Input sanitization (clear lowest bits if needed)
+                    xf_add(elemCount, Y2, Y2, Y);
+                    xf_pow(elemCount, X, Y, Z);
+                    xf_pow(elemCount, XSQ, Y2, ZZ);
+                }
+            }
+
+            xf_copy(elemCount, gXF_One, W);
+            if (xf_compare(elemCount, Z, gXF_Zero)) // Z != 0
+            {
+                xf_sub(elemCount, Z, ZZ, W);
+                xf_div(elemCount, W, Z, W);
+            }
+
+            s32 compare0 = xf_compare(elemCount, W, gXF_Zero);
+            if (compare0 > 0) // W > 0
+            {
+                ++K1;
+            }
+            if (compare0 < 0) // W < 0
+            {
+                ++K3;
+            }
+
+            xf_absolute(elemCount, W);
+
+            if (xf_compare(elemCount, R6, W) < 0) // R6 < W
+            {
+                xf_copy(elemCount, W, R6);
+                xf_copy(elemCount, X, X1);
+                if (j == 3)
+                {
+                    xf_copy(elemCount, Y, Y1);
+                }
+            }
+            xf_mul(elemCount, W, W, W);
+            xf_add(elemCount, R7, W, R7);
+            xf_add(elemCount, XL, DEL, XL);
+        }
+
+        u32 K2 = N - K3 - K1;
+        xf_div(elemCount, R7, XN, R7);
+        xf_square_root(elemCount, R7, R7);
+
+        if (j == 0)
+        {
+            fprintf(stdout, "\nTest of X^1.0 VS X\n");
+            fprintf(stdout, "%u random arguments were tested from the interval (", N);
+            xf_print(elemCount, A, 4);
+            fprintf(stdout, ", ");
+            xf_print(elemCount, B, 4);
+            fprintf(stdout, ")\n");
+            fprintf(stdout, "X^1.0 was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+        else
+        {
+            if (j < 3)
+            {
+                fprintf(stdout, "\nTest of XSQ^1.5 VS XSQ*X\n");
+                fprintf(stdout, "%u random arguments were tested from the interval (", N);
+                xf_print(elemCount, A, 4);
+                fprintf(stdout, ", ");
+                xf_print(elemCount, B, 4);
+                fprintf(stdout, ")\n");
+                fprintf(stdout, "X^1.5 was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+            }
+            else
+            {
+                fprintf(stdout, "\nTest of X^Y VS XSQ^(Y/2)");
+                xf_add(elemCount, C, DELY, W);
+                fprintf(stdout, "%u random arguments were tested from the region X in (", N);
+                xf_print(elemCount, A, 4);
+                fprintf(stdout, ", ");
+                xf_print(elemCount, B, 4);
+                fprintf(stdout, "), Y in (");
+                xf_print(elemCount, C, 4);
+                fprintf(stdout, ", ");
+                xf_print(elemCount, W, 4);
+                fprintf(stdout, ")\n");
+                fprintf(stdout, "X^Y was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+            }
+        }
+
+        fprintf(stdout, "There are %u base 2 significant digits in a floating-point number.\n", env->iT);
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R6, gXF_Zero)) // R6 != 0
+        {
+            xf_copy(elemCount, R6, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        if (j != 4)
+        {
+            fprintf(stdout, "The maximum relative error of ");
+            xf_print(elemCount, R6, 4);
+            fprintf(stdout, " = 2^");
+            xf_print(elemCount, W, 4);
+            fprintf(stdout, " occured for X = ");
+            xf_print(elemCount, X1, 4);
+            fprintf(stdout, "\n");
+        }
+        else
+        {
+            fprintf(stdout, "The maximum relative error of ");
+            xf_print(elemCount, R6, 4);
+            fprintf(stdout, " = 2^");
+            xf_print(elemCount, W, 4);
+            fprintf(stdout, " occured for X = ");
+            xf_print(elemCount, X1, 4);
+            fprintf(stdout, " Y = ");
+            xf_print(elemCount, Y1, 4);
+            fprintf(stdout, "\n");
+        }
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R7, gXF_Zero)) // R7 != 0
+        {
+            xf_copy(elemCount, R7, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The root mean square relative error was ");
+        xf_print(elemCount, R7, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        if (j > 0)
+        {
+            if (j == 2)
+            {
+                xf_copy(elemCount, &gXF_Tens[0][0], B);
+                xf_copy(elemCount, &gXF_Tenths[1][0], A);
+            }
+            else
+            {
+                xf_copy(elemCount, gXF_One, A);
+                xf_div(elemCount, ALXMAX, gXF_Three, B);
+                xf_exp(elemCount, B, B);
+            }
+        }
+    }
+
+    // NOTE(michiel): Special tests
+    fprintf(stdout, "\nSpecial tests\n");
+    fprintf(stdout, "The identity X^Y = (1/X)^(-Y) will be tested\n");
+
+    xf_copy(elemCount, &gXF_Tens[0][0], B);
+
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_random_unilateral(series, elemCount, X);
+        xf_mul(elemCount, X, B, X);
+        xf_add(elemCount, X, gXF_One, X);
+        xf_random_unilateral(series, elemCount, Y);
+        xf_mul(elemCount, Y, B, Y);
+        xf_add(elemCount, Y, gXF_One, Y);
+
+        xf_pow(elemCount, X, Y, Z);
+        xf_div(elemCount, gXF_One, X, ZZ);
+        xf_negate(elemCount, Y);
+        xf_pow(elemCount, ZZ, Y, ZZ);
+        xf_negate(elemCount, Y);
+
+        xf_sub(elemCount, Z, ZZ, W);
+        xf_div(elemCount, W, Z, W);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Y, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, W);
+        fprintf(stdout, "\n");
+    }
+
+    // NOTE(michiel): Error tests
+    fprintf(stdout, "\nTest of errors\n");
+    xf_copy(elemCount, BETA, X);
+    xf_from_s32(elemCount, env->minExp, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // No error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+    xf_from_s32(elemCount, env->maxExp - 1, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // No error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+    xf_clear(elemCount, X);
+    xf_copy(elemCount, gXF_Two, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // No error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+    xf_copy(elemCount, Y, X);
+    xf_negate(elemCount, X);
+    xf_clear(elemCount, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // Error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+    xf_copy(elemCount, gXF_Two, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // Error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+    xf_clear(elemCount, X);
+    xf_clear(elemCount, Y);
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, " ^ ");
+    xf_print(elemCount, Y, 4);
+    fprintf(stdout, " will be computed.\n"); // Error
+    xf_pow(elemCount, X, Y, Z);
+    fprintf(stdout, "pow returned the value ");
+    xf_print(elemCount, Z);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "\nThis concludes the tests of pow\n\n");
+}
+
+internal void
+test_sincos(Environment *env, u32 elemCount)
+{
+    u64 timeRand = time(NULL);
+    fprintf(stdout, "test_sincos: time rand %lu\n", timeRand);
+    RandomSeriesPCG series_ = random_seed_pcg(timeRand, 182546891254ULL);
+    RandomSeriesPCG *series = &series_;
+
+    u32 BETA[elemCount];
+    xf_copy(elemCount, gXF_Two, BETA);
+
+    u32 ALBETA[elemCount];
+    xf_copy(elemCount, gXF_Log2, ALBETA);
+
+    u32 AIT[elemCount];
+    xf_from_s32(elemCount, env->iT, AIT);
+
+    u32 A[elemCount];
+    u32 B[elemCount];
+    u32 C[elemCount];
+    xf_clear(elemCount, A);
+    xf_copy(elemCount, gXF_PiOver2, B);
+    xf_copy(elemCount, gXF_PiOver2, C);
+
+    u32 N = 2000;
+    u32 XN[elemCount];
+    xf_from_s32(elemCount, N, XN);
+
+    // NOTE(michiel): Random argument accuracy tests
+    u32 X1[elemCount];
+    u32 R6[elemCount];
+    u32 R7[elemCount];
+    u32 DEL[elemCount];
+    u32 XL[elemCount];
+
+    u32 X[elemCount];
+    u32 Y[elemCount];
+    u32 Z[elemCount];
+    u32 ZZ[elemCount];
+    u32 W[elemCount];
+
+    for (u32 j = 0; j < 3; ++j)
+    {
+        u32 K1 = 0;
+        u32 K3 = 0;
+        xf_clear(elemCount, X1);
+        xf_clear(elemCount, R6);
+        xf_clear(elemCount, R7);
+        xf_sub(elemCount, B, A, DEL);
+        xf_div(elemCount, DEL, XN, DEL);
+        xf_copy(elemCount, A, XL);
+
+        for (u32 i = 0; i < N; ++i)
+        {
+            xf_random_unilateral(series, elemCount, X);
+            xf_mul(elemCount, DEL, X, X);
+            xf_add(elemCount, X, XL, X);
+
+            // NOTE(michiel): Input sanitization
+            xf_div(elemCount, X, gXF_Three, Y);
+            xf_add(elemCount, X, Y, Y);
+            xf_sub(elemCount, Y, X, Y);
+            xf_mul(elemCount, Y, gXF_Three, X);
+
+            if (j < 2)
+            {
+                xf_sin(elemCount, X, Z);
+                xf_sin(elemCount, Y, ZZ);
+                if (xf_compare(elemCount, Z, gXF_Zero) != 0)
+                {
+                    xf_mul(elemCount, ZZ, ZZ, W);
+                    xf_mul(elemCount, gXF_Four, W, W);
+                    xf_sub(elemCount, gXF_Three, W, W);
+                    xf_mul(elemCount, ZZ, W, W);
+                    xf_sub(elemCount, Z, W, W);
+                    xf_div(elemCount, W, Z, W);
+                }
+                else
+                {
+                    xf_copy(elemCount, gXF_One, W);
+                }
+            }
+            else
+            {
+                xf_cos(elemCount, X, Z);
+                xf_cos(elemCount, Y, ZZ);
+                if (xf_compare(elemCount, Z, gXF_Zero) != 0)
+                {
+                    xf_mul(elemCount, ZZ, ZZ, W);
+                    xf_mul(elemCount, gXF_Four, W, W);
+                    xf_sub(elemCount, gXF_Three, W, W);
+                    xf_mul(elemCount, ZZ, W, W);
+                    xf_add(elemCount, Z, W, W);
+                    xf_div(elemCount, W, Z, W);
+                }
+                else
+                {
+                    xf_copy(elemCount, gXF_One, W);
+                }
+            }
+
+            s32 compare0 = xf_compare(elemCount, W, gXF_Zero);
+            if (compare0 > 0) // W > 0
+            {
+                ++K1;
+            }
+            if (compare0 < 0) // W < 0
+            {
+                ++K3;
+            }
+
+            xf_absolute(elemCount, W);
+
+            if (xf_compare(elemCount, R6, W) < 0) // R6 < W
+            {
+                xf_copy(elemCount, W, R6);
+                xf_copy(elemCount, X, X1);
+            }
+            xf_mul(elemCount, W, W, W);
+            xf_add(elemCount, R7, W, R7);
+            xf_add(elemCount, XL, DEL, XL);
+        }
+
+        u32 K2 = N - K3 - K1;
+        xf_div(elemCount, R7, XN, R7);
+        xf_square_root(elemCount, R7, R7);
+
+        if (j < 2)
+        {
+            fprintf(stdout, "\nTest of sin(X) VS 3*sin(X/3)-4*sin(X/3)^3\n");
+            fprintf(stdout, "%u random arguments were tested from the interval (", N);
+            xf_print(elemCount, A, 4);
+            fprintf(stdout, ", ");
+            xf_print(elemCount, B, 4);
+            fprintf(stdout, ")\n");
+            fprintf(stdout, "sin(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+        else
+        {
+            fprintf(stdout, "\nTest of cos(X) VS 4*cos(X/3)^3-3*cos(X/3)\n");
+            fprintf(stdout, "%u random arguments were tested from the interval (", N);
+            xf_print(elemCount, A, 4);
+            fprintf(stdout, ", ");
+            xf_print(elemCount, B, 4);
+            fprintf(stdout, ")\n");
+            fprintf(stdout, "cos(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+
+        fprintf(stdout, "There are %u base 2 significant digits in a floating-point number.\n", env->iT);
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R6, gXF_Zero)) // R6 != 0
+        {
+            xf_copy(elemCount, R6, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The maximum relative error of ");
+        xf_print(elemCount, R6, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, " occured for X = ");
+        xf_print(elemCount, X1, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R7, gXF_Zero)) // R7 != 0
+        {
+            xf_copy(elemCount, R7, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The root mean square relative error was ");
+        xf_print(elemCount, R7, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        if (j == 1)
+        {
+            xf_add(elemCount, B, C, A);
+        }
+        else
+        {
+            xf_mul(elemCount, gXF_Six, gXF_Pi, A);
+        }
+        xf_add(elemCount, A, C, B);
+    }
+
+    // NOTE(michiel): Special tests
+    fprintf(stdout, "\nSpecial tests\n");
+
+    u32 BETAP[elemCount];
+    xf_copy(elemCount, gXF_One, BETAP);
+    xf_set_exponent(elemCount, BETAP, XFLOAT_EXP_BIAS + (env->iT / 2));
+    xf_div(elemCount, gXF_One, BETAP, C);
+    xf_add(elemCount, A, C, X);
+    xf_sin(elemCount, X, Z);
+    xf_sub(elemCount, A, C, X);
+    xf_sin(elemCount, X, X);
+    xf_sub(elemCount, Z, X, Z);
+    xf_add(elemCount, C, C, X);
+    xf_div(elemCount, Z, X, Z);
+    fprintf(stdout, "If ");
+    xf_print(elemCount, Z, 20);
+    fprintf(stdout, " is not almost 1.0, sin has the wrong period.\n");
+
+    fprintf(stdout, "\nThe identity sin(-X) = -sin(X) will be tested\n"); // sin(-X) + sin(X) == 0
+
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_random_unilateral(series, elemCount, X);
+        xf_mul(elemCount, X, A, X);
+        xf_sin(elemCount, X, Y);
+        xf_negate(elemCount, X);
+        xf_sin(elemCount, X, Z);
+        xf_add(elemCount, Z, Y, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+    }
+
+    fprintf(stdout, "\nThe identity sin(X) = X, for small X, will be tested\n");
+    xf_set_exponent(elemCount, BETAP, XFLOAT_EXP_BIAS + env->iT);
+    xf_random_unilateral(series, elemCount, X);
+    xf_div(elemCount, X, BETAP, X);
+
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_sin(elemCount, X, Z);
+        xf_sub(elemCount, X, Z, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+        xf_div(elemCount, X, gXF_Two, X);
+    }
+
+    fprintf(stdout, "\nThe identity cos(-X) = cos(X) will be tested\n");
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_random_unilateral(series, elemCount, X);
+        xf_mul(elemCount, X, A, X);
+        xf_cos(elemCount, X, Y);
+        xf_negate(elemCount, X);
+        xf_cos(elemCount, X, Z);
+        xf_sub(elemCount, Z, Y, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+    }
+
+    fprintf(stdout, "\nTest of underflow for very small argument\n");
+    u32 EXPON[elemCount];
+    xf_from_s32(elemCount, env->minExp, EXPON);
+    xf_from_f32(elemCount, 0.75f, X);
+    xf_mul(elemCount, X, EXPON, EXPON);
+
+    xf_pow(elemCount, gXF_Two, EXPON, X);
+    xf_sin(elemCount, X, Y);
+    fprintf(stdout, "sin(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+    fprintf(stdout, "\nThe following three lines illustrate the loss in significance for large arguments. The arguments are consecutive.\n");
+    xf_square_root(elemCount, BETAP, Z);
+    xf_sub(elemCount, gXF_One, env->epsNeg, X);
+    xf_mul(elemCount, X, Z, X);
+    xf_sin(elemCount, X, Y);
+    fprintf(stdout, "sin(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+    xf_sin(elemCount, Z, Y);
+    fprintf(stdout, "sin(");
+    xf_print(elemCount, Z, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+    xf_add(elemCount, gXF_One, env->eps, X);
+    xf_mul(elemCount, X, Z, X);
+    xf_sin(elemCount, X, Y);
+    fprintf(stdout, "sin(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    // NOTE(michiel): Error tests
+    fprintf(stdout, "\nTest of errors\n");
+
+    xf_copy(elemCount, BETAP, X);
+    fprintf(stdout, "sin() will be called with the argument ");
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, "\n"); // error
+    xf_sin(elemCount, X, Y);
+    fprintf(stdout, "sin returned the value ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "\nThis concludes the tests of sin/cos\n\n");
 }

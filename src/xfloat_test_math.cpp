@@ -544,9 +544,11 @@ int main(int argc, char **argv)
     Environment env = {};
     init_environment(&env, ELEMENT_COUNT, &arena);
 
-    test_square_root(&env, ELEMENT_COUNT);
-    test_log(&env, ELEMENT_COUNT);
-    test_exp(&env, ELEMENT_COUNT);
+    //test_square_root(&env, ELEMENT_COUNT);
+    //test_log(&env, ELEMENT_COUNT);
+    //test_exp(&env, ELEMENT_COUNT);
+    //test_pow(&env, ELEMENT_COUNT);
+    test_sincos(&env, ELEMENT_COUNT);
 
     return 0;
 }
