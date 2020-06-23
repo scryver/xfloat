@@ -2,6 +2,7 @@ struct Environment
 {
     // NOTE(michiel): iBeta is presumed to be 2
     u32 iT;
+    b32 round;
 
     s32 minExp; // NOTE(michiel): Unbiased!
     s32 maxExp;
@@ -88,6 +89,22 @@ init_environment(Environment *env, u32 elemCount, Arena *arena)
     xf_set_exponent(elemCount, env->xMin, 1);
 
     xf_max_value(elemCount, env->xMax);
+
+    u32 a[elemCount];
+    u32 test[elemCount];
+    xf_copy(elemCount, gXF_One, a);
+    do
+    {
+        xf_add(elemCount, a, a, a);
+        xf_add(elemCount, a, gXF_One, test);
+        xf_sub(elemCount, test, a, test);
+        xf_sub(elemCount, test, gXF_One, test);
+    } while (xf_compare(elemCount, test, gXF_Zero) == 0);
+
+    xf_sub(elemCount, gXF_Two, gXF_One, test);
+    xf_add(elemCount, a, test, test);
+    xf_sub(elemCount, test, a, test);
+    env->round = xf_compare(elemCount, test, gXF_Zero) != 0;
 }
 
 internal void
@@ -1931,4 +1948,348 @@ test_tancot(Environment *env, u32 elemCount)
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of tan/cot\n\n"); // 1100
+}
+
+global String gASinCosHalfPi = static_string("0.00048382679489661923132169163975144209858469968755291048747229615390820314310449931401741267105853399107404325664115332354692230477529111586267970406424055872514205135096926055277982231147447746519098221440548783296672306423782411689339158263560095457282428346173017430522716332410669680363012457063686229350330315779408744076046048141462704585768218394629518000566526527441023326069207347597075580471652863518287979597654609305869096630589655255927403723118998137478367594287636244561396909150597456491683668122032832154301069747319761236859535108993047185138526960858814658837619233740923383470256600028406357263178041389288567137889480458681858936073422045061247671507327479268552539613984462946177100997805606451098043201720907990681488738565498025935360567499999918648902497552986586640804815929751222972767345415132126115412667234251763096559408550500156891937644329376660419071030858883457365179912674521437773436557978143194117689379687597889092889026608561340330650096393830559795460821009946904762860053274293163943296807669091398411515097601765092648449788681129970694562486088764173956575778742862122707534797541476655843086392794453754919087731873246965962753020046385083556950492441200642918080178185383005235509097147779809947338391872472412768988736342355202376732310402334212953474564665683851449457605237608102848301202901907509675562669121501779382012374823663195709963630213496139839117739081800467086082060996229315751514309148727785337491925274729429346349784546360539875465147766058267249360137798011824033274955994091739887678318490371327126393127590920878733644548888639690004082353000807262459608660860738617507072098678427408068057867627606673787092473421926166195369707166727388120843125949178474278104960961109213627512712844383589524730082673340249431361639589304289219191398398834072705047694189318047534003211256260255869649244804206424431347280212098264251110533059315337213931101959747252356185689348047818218595864373388232878698120694543291632299790669523901379504973288203947563473419917629785491291131026124470386335973913424130073849545132006819721872765253410174812622587469982571571490459532962546861084823075785492919370529894297988648774946508087696423406913434193447138707799592796262297697971552498626234042299363682234792432691836811131304956230402562194219522562206827488139039885784571799885006480804472084743427792420317671103611291424432407922801425300842136972613373383944762606926127497733336391199322829805817744311528872824901779681728408716205625753803473972554829804701261443985544657283456843361437447028005075165430896434046043738045891246929450485745483799263068277489094656489241084149947436132940242878200713523877756618982072576187311718227142922239763293391052557067736786976155671358305106798476811572147624246859355507288270179513996720187100365528926953109919372390423924484166072285693437597175321510922659552424050268530734033745963909559896997603070983171437722032187256185909608999919550795978090733757134561987447045359324711598078397260404757327511261580194096507104688106892797831946889354151953489603867336109128129983075071075153401922386727460130270733296260074872142536625933300106621704409535524316586732482572695289813428050275405332939849908178736819202628572955144853207005548560314021951987975783857885021016893496800361527938158817971093656257356026646409591309306293366078959920742441458223530478763534786104587835583614554908454576400867533563742916114359176046769828625605417895756849410457221050337551673355515706335556849543292581991575098508257558425857188288091757782544245499492999119367276416581775382395926794661309274481606646654492853210233762953545774");
+
+internal void
+test_asincos(Environment *env, u32 elemCount)
+{
+    u64 timeRand = time(NULL);
+    fprintf(stdout, "test_asincos: time rand %lu\n", timeRand);
+    RandomSeriesPCG series_ = random_seed_pcg(timeRand, 182546891254ULL);
+    RandomSeriesPCG *series = &series_;
+
+    u32 BETA[elemCount];
+    xf_copy(elemCount, gXF_Two, BETA);
+
+    u32 ALBETA[elemCount];
+    xf_copy(elemCount, gXF_Log2, ALBETA);
+
+    u32 AIT[elemCount];
+    xf_from_s32(elemCount, env->iT, AIT);
+
+    s64 K;
+    u32 temp[elemCount];
+    xf_pow(elemCount, gXF_Two, AIT, temp);
+    xf_log10(elemCount, temp, temp);
+    K = xf_integer_fraction(elemCount, temp, temp) + 1;
+
+    u32 C1[elemCount];
+    u32 C2[elemCount];
+    xf_from_s32(elemCount, 201, C1);
+    xf_from_s32(elemCount, 128, C2);
+    xf_div(elemCount, C1, C2, C1);
+    xf_from_string(elemCount, gASinCosHalfPi, C2);
+    //xf_copy(elemCount, gXF_PiOver2, C1);
+    //xf_copy(elemCount, gXF_Zero, C2);
+
+    u32 A[elemCount];
+    u32 B[elemCount];
+    xf_from_f32(elemCount, -0.125f, A);
+    xf_from_f32(elemCount,  0.125f, B);
+
+    u32 N = 2000;
+    u32 XN[elemCount];
+    xf_from_s32(elemCount, N, XN);
+
+    s32 L = -1;
+
+    // NOTE(michiel): Random argument accuracy tests
+    u32 X1[elemCount];
+    u32 R6[elemCount];
+    u32 R7[elemCount];
+    u32 DEL[elemCount];
+    u32 XL[elemCount];
+
+    u32 X[elemCount];
+    u32 Y[elemCount];
+    u32 YSQ[elemCount];
+    u32 Z[elemCount];
+    u32 ZZ[elemCount];
+    u32 W[elemCount];
+
+    u32 SUM[elemCount];
+    u32 XM[elemCount];
+    u32 S[elemCount];
+
+    for (u32 j = 0; j < 5; ++j)
+    {
+        u32 K1 = 0;
+        u32 K3 = 0;
+
+        L = -L;
+
+        xf_clear(elemCount, X1);
+        xf_clear(elemCount, R6);
+        xf_clear(elemCount, R7);
+        xf_sub(elemCount, B, A, DEL);
+        xf_div(elemCount, DEL, XN, DEL);
+        xf_copy(elemCount, A, XL);
+
+        for (u32 i = 0; i < N; ++i)
+        {
+            xf_random_unilateral(series, elemCount, X);
+            xf_mul(elemCount, DEL, X, X);
+            xf_add(elemCount, X, XL, X);
+
+            if (j <= 1)
+            {
+                xf_copy(elemCount, X, Y);
+                xf_mul(elemCount, Y, Y, YSQ);
+            }
+            else
+            {
+                xf_mul(elemCount, gXF_Half, X, YSQ);
+                xf_absolute(elemCount, YSQ);
+                xf_sub(elemCount, gXF_Half, YSQ, YSQ);  // YSQ = 0.5 - 0.5*ABS(X)
+                xf_add(elemCount, YSQ, YSQ, X);
+                xf_sub(elemCount, gXF_Half, X, X);
+                xf_add(elemCount, X, gXF_Half, X);
+
+                if (j == 4)
+                {
+                    xf_negate(elemCount, X);
+                }
+
+                xf_square_root(elemCount, YSQ, Y);
+                xf_add(elemCount, Y, Y, Y);
+            }
+
+            xf_clear(elemCount, SUM);
+            xf_from_s64(elemCount, K + K + 1, XM);
+
+            if (L > 0)
+            {
+                xf_asin(elemCount, X, Z);
+            }
+            else
+            {
+                xf_acos(elemCount, X, Z);
+            }
+
+            for (s64 m = 0; m < K; ++m)
+            {
+                xf_div(elemCount, gXF_One, XM, temp);
+                xf_add(elemCount, SUM, temp, SUM);
+                xf_mul(elemCount, SUM, YSQ, SUM);
+                xf_sub(elemCount, XM, gXF_Two, XM);
+                xf_add(elemCount, XM, gXF_One, temp);
+                xf_div(elemCount, XM, temp, temp);
+                xf_mul(elemCount, SUM, temp, SUM);
+            }
+
+            xf_mul(elemCount, Y, SUM, SUM);
+
+            if ((j != 0) && (j != 3))
+            {
+                xf_add(elemCount, C1, C2, S);
+                xf_sub(elemCount, C1, S, temp);
+                xf_add(elemCount, temp, C2, temp);
+                xf_sub(elemCount, temp, SUM, SUM);
+                xf_add(elemCount, S, SUM, ZZ);
+                xf_sub(elemCount, S, ZZ, temp);
+                xf_add(elemCount, temp, SUM, SUM);
+                xf_sub(elemCount, SUM, Y, SUM);
+                xf_copy(elemCount, ZZ, S);
+                xf_add(elemCount, S, SUM, ZZ);
+                xf_sub(elemCount, S, ZZ, temp);
+                xf_add(elemCount, temp, SUM, SUM);
+                if (!env->round)
+                {
+                    xf_add(elemCount, SUM, SUM, temp);
+                    xf_add(elemCount, ZZ, temp, ZZ);
+                }
+            }
+            else
+            {
+                xf_add(elemCount, Y, SUM, ZZ);
+                xf_sub(elemCount, Y, ZZ, temp);
+                xf_add(elemCount, temp, SUM, SUM);
+                if (!env->round)
+                {
+                    xf_add(elemCount, SUM, SUM, temp);
+                    xf_add(elemCount, ZZ, temp, ZZ);
+                }
+            }
+
+            if (xf_compare(elemCount, Z, gXF_Zero) != 0) // Z != 0
+            {
+                xf_sub(elemCount, Z, ZZ, W);
+                xf_div(elemCount, W, Z, W);  // W = (Z - ZZ) / Z
+            }
+            else
+            {
+                xf_copy(elemCount, gXF_One, W);
+            }
+
+            s32 compare0 = xf_compare(elemCount, W, gXF_Zero);
+            if (compare0 > 0) // W > 0
+            {
+                ++K1;
+            }
+            if (compare0 < 0) // W < 0
+            {
+                ++K3;
+            }
+
+            xf_absolute(elemCount, W);
+
+            if (xf_compare(elemCount, R6, W) < 0) // R6 < W
+            {
+                xf_copy(elemCount, W, R6);
+                xf_copy(elemCount, X, X1);
+            }
+            xf_mul(elemCount, W, W, W);
+            xf_add(elemCount, R7, W, R7);
+            xf_add(elemCount, XL, DEL, XL);
+        }
+
+        u32 K2 = N - K3 - K1;
+        xf_div(elemCount, R7, XN, R7);
+        xf_square_root(elemCount, R7, R7);
+
+        if (L > 0)
+        {
+            fprintf(stdout, "\nTest of asin(X) VS taylor series\n");
+            fprintf(stdout, "%u random arguments were tested from the interval (", N);
+            xf_print(elemCount, A, 4);
+            fprintf(stdout, ", ");
+            xf_print(elemCount, B, 4);
+            fprintf(stdout, ")\n");
+            fprintf(stdout, "asin(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+        else
+        {
+            fprintf(stdout, "\nTest of acos(X) VS taylor series\n");
+            fprintf(stdout, "%u random arguments were tested from the interval (", N);
+            xf_print(elemCount, A, 4);
+            fprintf(stdout, ", ");
+            xf_print(elemCount, B, 4);
+            fprintf(stdout, ")\n");
+            fprintf(stdout, "acos(X) was larger %u times, agreed %u times and was smaller %u times\n", K1, K2, K3);
+        }
+
+        fprintf(stdout, "There are %u base 2 significant digits in a floating-point number.\n", env->iT);
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R6, gXF_Zero)) // R6 != 0
+        {
+            xf_copy(elemCount, R6, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The maximum relative error of ");
+        xf_print(elemCount, R6, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, " occured for X = ");
+        xf_print(elemCount, X1, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_from_s32(elemCount, -999999, W);
+        if (xf_compare(elemCount, R7, gXF_Zero)) // R7 != 0
+        {
+            xf_copy(elemCount, R7, W);
+            xf_absolute(elemCount, W);
+            xf_log(elemCount, W, W);
+            xf_div(elemCount, W, ALBETA, W);
+        }
+        fprintf(stdout, "The root mean square relative error was ");
+        xf_print(elemCount, R7, 4);
+        fprintf(stdout, " = 2^");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        xf_add(elemCount, AIT, W, W);
+        xf_maximum(elemCount, W, gXF_Zero, W);
+        fprintf(stdout, "The estimated loss of base 2 significant digits is ");
+        xf_print(elemCount, W, 4);
+        fprintf(stdout, "\n");
+
+        if (j == 1)
+        {
+            xf_from_f32(elemCount, 0.75f, A);
+            xf_copy(elemCount, gXF_One, B);
+        }
+        else if (j == 3)
+        {
+            xf_copy(elemCount, A, B);
+            xf_negate(elemCount, B);
+            xf_copy(elemCount, gXF_One, A);
+            xf_negate(elemCount, A);
+            xf_add(elemCount, C1, C1, C1);
+            xf_add(elemCount, C2, C2, C2);
+            L = -L;
+        }
+    }
+
+    // NOTE(michiel): Special tests
+    fprintf(stdout, "\nSpecial tests\n");
+
+    fprintf(stdout, "The identity asin(-X) = -asin(X) will be tested\n");
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_random_unilateral(series, elemCount, X);
+        xf_mul(elemCount, A, X, X);
+        xf_negate(elemCount, X);
+        xf_asin(elemCount, X, Y);
+        xf_negate(elemCount, X);
+        xf_asin(elemCount, X, Z);
+        xf_add(elemCount, Z, Y, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+    }
+
+    fprintf(stdout, "\nThe identity asin(X) = X, for small X, will be tested\n");
+    u32 BETAP[elemCount];
+    xf_copy(elemCount, gXF_One, BETAP);
+    xf_set_exponent(elemCount, BETAP, XFLOAT_EXP_BIAS + env->iT + 1);
+    xf_random_unilateral(series, elemCount, X);
+    xf_div(elemCount, X, BETAP, X);
+    for (u32 i = 0; i < 5; ++i)
+    {
+        xf_asin(elemCount, X, Z);
+        xf_sub(elemCount, X, Z, Z);
+        xf_print(elemCount, X, 8);
+        fprintf(stdout, ", ");
+        xf_print(elemCount, Z);
+        fprintf(stdout, "\n");
+        xf_div(elemCount, X, gXF_Two, X);
+    }
+
+    fprintf(stdout, "\nTest of underflow for very small argument\n");
+    u32 EXPON[elemCount];
+    xf_from_s32(elemCount, env->minExp, EXPON);
+    xf_from_f32(elemCount, 0.75f, X);
+    xf_mul(elemCount, X, EXPON, EXPON);
+    xf_pow(elemCount, gXF_Two, EXPON, X);
+    xf_asin(elemCount, X, Y);
+    fprintf(stdout, "asin(");
+    xf_print(elemCount, X, 6);
+    fprintf(stdout, ") = ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    // NOTE(michiel): Error tests
+    fprintf(stdout, "\nTest of errors\n");
+    xf_from_f32(elemCount, 1.2f, X);
+    fprintf(stdout, "sin() will be called with the argument ");
+    xf_print(elemCount, X, 4);
+    fprintf(stdout, "\n"); // error
+    xf_asin(elemCount, X, Y);
+    fprintf(stdout, "asin returned the value ");
+    xf_print(elemCount, Y);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "\nThis concludes the tests of asin/acos\n\n"); // 1100
 }

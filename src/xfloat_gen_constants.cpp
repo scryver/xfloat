@@ -1,5 +1,9 @@
 #include "../libberdip/src/platform.h"
 
+#ifndef EXTENDED_PRECISION_FULL
+#define EXTENDED_PRECISION_FULL  0
+#endif
+
 global s32 XFLOAT_NUMBER_TENS;
 global s32 XFLOAT_MIN_NTEN;
 global s32 XFLOAT_MAX_NTEN;
@@ -115,6 +119,65 @@ generate_value_from_string_(FILE *fileOutput, u32 elemCount, String strValue, St
     generate_named_value_(fileOutput, elemCount, name, value, valueName);
 }
 
+#if EXTENDED_PRECISION_FULL
+internal void
+generate_upper_lower_from_string_(FILE *fileOutput, u32 elemCount, String constName, String name, u32 *upper, u32 *lower, char *upperName, char *lowerName)
+{
+    // TODO(michiel): Do a test with different precisions (one word, two words ore more extra)
+    // For example: 0.001 * lower + 0.001 * upper
+    u32 extraCount = elemCount - (XFLOAT_MANTISSA_IDX + 1);
+    u32 totalCount = elemCount + extraCount;
+    u32 total[totalCount];
+
+    xf_from_string(totalCount, constName, total);
+    if (!total[totalCount - 1])
+    {
+        fprintf(stderr, "NOT ENOUGH DIGITS OF %.*s!!!\n", STR_FMT(name));
+    }
+    xf_copy(elemCount, total, upper);
+
+    lower[0] = total[0];
+    lower[1] = 0;
+    xf_set_exponent(elemCount, lower, xf_get_exponent(elemCount, lower) - 32*extraCount);
+    copy(extraCount * sizeof(u32), total + elemCount, lower + 2);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s most-significant 32bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, upper, upperName);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s least-significant bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, lower, lowerName);
+}
+
+internal void
+generate_upper_lower_from_string_div2_(FILE *fileOutput, u32 elemCount, String constName, String name, u32 *upper, u32 *lower, char *upperName, char *lowerName)
+{
+    // TODO(michiel): Do a test with different precisions (one word, two words ore more extra)
+    // For example: 0.001 * lower + 0.001 * upper
+    u32 extraCount = elemCount - (XFLOAT_MANTISSA_IDX + 1);
+    u32 totalCount = elemCount + extraCount;
+    u32 total[totalCount];
+
+    xf_from_string(totalCount, constName, total);
+    if (!total[totalCount - 1])
+    {
+        fprintf(stderr, "NOT ENOUGH DIGITS OF %.*s!!!\n", STR_FMT(name));
+    }
+    xf_naive_div2(totalCount, total);
+
+    xf_copy(elemCount, total, upper);
+
+    lower[0] = total[0];
+    lower[1] = 0;
+    xf_set_exponent(elemCount, lower, xf_get_exponent(elemCount, lower) - 32*extraCount);
+    copy(extraCount * sizeof(u32), total + elemCount, lower + 2);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s most-significant 32bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, upper, upperName);
+
+    fprintf(fileOutput, "// NOTE(generator): %.*s least-significant bits\n", STR_FMT(name));
+    generate_value_(fileOutput, elemCount, lower, lowerName);
+}
+#else
 internal void
 generate_upper_lower_from_string_(FILE *fileOutput, u32 elemCount, String constName, String name, u32 *upper, u32 *lower, char *upperName, char *lowerName)
 {
@@ -168,6 +231,7 @@ generate_upper_lower_from_string_div2_(FILE *fileOutput, u32 elemCount, String c
     fprintf(fileOutput, "// NOTE(generator): %.*s least-significant bits\n", STR_FMT(name));
     generate_value_(fileOutput, elemCount, lower, lowerName);
 }
+#endif
 
 s32 main(s32 argc, char **argv)
 {
@@ -419,42 +483,48 @@ s32 main(s32 argc, char **argv)
 
     // NOTE(michiel): For the next part we need to expand the elemcount.
 
+#if EXTENDED_PRECISION_FULL
+    u32 expandedCount = elemCount + (elemCount - (XFLOAT_MANTISSA_IDX + 1));
+#else
+    u32 expandedCount = elemCount + 1;
+#endif
+
     deallocate(tenA);
     deallocate(tenB);
-    tenA = allocate_array(u32, elemCount + 1);
-    tenB = allocate_array(u32, elemCount + 1);
+    tenA = allocate_array(u32, expandedCount);
+    tenB = allocate_array(u32, expandedCount);
 
-    xf_clear(elemCount + 1, tenA);
-    xf_clear(elemCount + 1, tenB);
-    xf_set_exponent(elemCount + 1, tenA, XFLOAT_EXP_BIAS + 4);
-    xf_set_exponent(elemCount + 1, tenB, XFLOAT_EXP_BIAS + 1);
+    xf_clear(expandedCount, tenA);
+    xf_clear(expandedCount, tenB);
+    xf_set_exponent(expandedCount, tenA, XFLOAT_EXP_BIAS + 4);
+    xf_set_exponent(expandedCount, tenB, XFLOAT_EXP_BIAS + 1);
     tenA[XFLOAT_MANTISSA_IDX + 1] = 0xA0000000;
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
     deallocate(gXF_Tens);
-    gXF_Tens = allocate_array(u32, genTens * (elemCount + 1));
+    gXF_Tens = allocate_array(u32, genTens * expandedCount);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
-        xf_mul(elemCount + 1, tenA, tenB, tenA);
-        xf_copy(elemCount + 1, tenA, xf_get_power_of_ten(elemCount + 1, tenIdx));
-        xf_copy(elemCount + 1, tenA, tenB);
+        xf_mul(expandedCount, tenA, tenB, tenA);
+        xf_copy(expandedCount, tenA, xf_get_power_of_ten(expandedCount, tenIdx));
+        xf_copy(expandedCount, tenA, tenB);
     }
 
-    xf_clear(elemCount + 1, tenA);
-    xf_clear(elemCount + 1, tenB);
-    xf_set_exponent(elemCount + 1, tenA, XFLOAT_EXP_BIAS + 4);
-    xf_set_exponent(elemCount + 1, tenB, XFLOAT_EXP_BIAS + 1);
+    xf_clear(expandedCount, tenA);
+    xf_clear(expandedCount, tenB);
+    xf_set_exponent(expandedCount, tenA, XFLOAT_EXP_BIAS + 4);
+    xf_set_exponent(expandedCount, tenB, XFLOAT_EXP_BIAS + 1);
     tenA[XFLOAT_MANTISSA_IDX + 1] = 0xA0000000;
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
     deallocate(gXF_Tenths);
-    gXF_Tenths = allocate_array(u32, genTens * (elemCount + 1));
-    xf_div(elemCount + 1, tenB, tenA, tenA);
+    gXF_Tenths = allocate_array(u32, genTens * expandedCount);
+    xf_div(expandedCount, tenB, tenA, tenA);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
-        xf_copy(elemCount + 1, tenA, xf_get_power_of_tenths(elemCount + 1, tenIdx));
-        xf_copy(elemCount + 1, tenA, tenB);
-        xf_mul(elemCount + 1, tenA, tenB, tenA);
+        xf_copy(expandedCount, tenA, xf_get_power_of_tenths(expandedCount, tenIdx));
+        xf_copy(expandedCount, tenA, tenB);
+        xf_mul(expandedCount, tenA, tenB, tenA);
     }
 
     gXF_PiOver2Upper = allocate_array(u32, elemCount);

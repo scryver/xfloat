@@ -779,10 +779,7 @@ xf_asin(u32 elemCount, u32 *src, u32 *dst)
         {
             xf_sub(elemCount, gXF_Half, accumA, accumZSqr);
             xf_add(elemCount, gXF_Half, accumZSqr, accumZSqr);
-            if (xf_get_exponent(elemCount, accumZSqr))
-            {
-                xf_naive_div2(elemCount, accumZSqr);
-            }
+            xf_naive_div2(elemCount, accumZSqr);
             xf_square_root(elemCount, accumZSqr, accumA);
             flag = 1;
         }
