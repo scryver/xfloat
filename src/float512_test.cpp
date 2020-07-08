@@ -1,9 +1,9 @@
 #include "../libberdip/src/platform.h"
 
 #include "xfloat.h"
-#include "xfloat.cpp"
-#include "xfloat_constants_16.cpp"
-#include "xfloat_string.cpp"
+#include "xfloat.c"
+#include "xfloat_constants_16.c"
+#include "xfloat_string.c"
 
 #include "float512.h"
 

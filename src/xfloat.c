@@ -729,7 +729,7 @@ xf_normalize_mantissa(u32 elemCount, u32 *x, s32 *shiftCount)
 //
 
 internal void
-xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub = false)
+xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
 {
     u32 accumBuf1[elemCount + 1];
     u32 accumBuf2[elemCount + 1];

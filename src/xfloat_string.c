@@ -274,7 +274,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
 internal String
 string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
 {
-    String result = {};
+    String result = {0};
     if (xf_is_infinite(elemCount, x))
     {
         result = string_fmt(maxDataCount, data, "%sINF", xf_get_sign(elemCount, x) ? "-" : "");
@@ -443,14 +443,14 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
 
         sprintf(ss, "E%d", exponent);
 
-        result = string((char *)data);
+        result = string(string_length((char *)data), (char *)data);
     }
 
     return result;
 }
 
 internal void
-xf_print(u32 elemCount, u32 *x, u32 digits = U32_MAX)
+xf_print(u32 elemCount, u32 *x, u32 digits)
 {
     u8 stringBuf[512];
     String xStr = string_from_xf(elemCount, x, digits, array_count(stringBuf), stringBuf);

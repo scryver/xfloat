@@ -1,4 +1,4 @@
-struct Environment
+typedef struct Environment
 {
     // NOTE(michiel): iBeta is presumed to be 2
     u32 iT;
@@ -11,7 +11,7 @@ struct Environment
     u32 *epsNeg;
     u32 *xMin;
     u32 *xMax;
-};
+} Environment;
 
 internal void
 init_environment(Environment *env, u32 elemCount, Arena *arena)
@@ -253,35 +253,35 @@ test_square_root(Environment *env, u32 elemCount)
     fprintf(stdout, "square_root(xmin) = square_root(");
     xf_print(elemCount, X, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_sub(elemCount, gXF_One, env->epsNeg, X);
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root(1-epsNeg) = square_root(1-");
     xf_print(elemCount, env->epsNeg, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, gXF_One, X);
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root(1.0) = square_root(");
     xf_print(elemCount, X, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_add(elemCount, gXF_One, env->eps, X);
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root(1+eps) = square_root(1+");
     xf_print(elemCount, env->eps, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, env->xMax, X);
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root(xmax) = square_root(");
     xf_print(elemCount, X, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     // NOTE(michiel): Error tests
@@ -293,7 +293,7 @@ test_square_root(Environment *env, u32 elemCount)
     // This should not trigger an error message
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, gXF_One, X);
     xf_make_negative(elemCount, X);
@@ -303,7 +303,7 @@ test_square_root(Environment *env, u32 elemCount)
     // This should trigger an error message
     xf_square_root(elemCount, X, Y);
     fprintf(stdout, "square_root returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of square_root\n\n");
@@ -595,7 +595,7 @@ test_log(Environment *env, u32 elemCount)
         xf_add(elemCount, Z, Y, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -610,14 +610,14 @@ test_log(Environment *env, u32 elemCount)
     fprintf(stdout, "log(xmin) = log(");
     xf_print(elemCount, X, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, env->xMax, X);
     xf_log(elemCount, X, Y);
     fprintf(stdout, "log(xmax) = log(");
     xf_print(elemCount, X, 4);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     // NOTE(michiel): Error tests
@@ -630,7 +630,7 @@ test_log(Environment *env, u32 elemCount)
     // This should trigger a error message
     xf_log(elemCount, X, Y);
     fprintf(stdout, "log returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, gXF_Zero, X);
     fprintf(stdout, "log() will be called with the argument ");
@@ -638,7 +638,7 @@ test_log(Environment *env, u32 elemCount)
     fprintf(stdout, "\n");
     xf_log(elemCount, X, Y);
     fprintf(stdout, "log returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of log\n\n");
@@ -872,7 +872,7 @@ test_exp(Environment *env, u32 elemCount)
         xf_sub(elemCount, Z, gXF_One, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -881,23 +881,23 @@ test_exp(Environment *env, u32 elemCount)
     xf_exp(elemCount, X, Y);
     xf_sub(elemCount, Y, gXF_One, Y);
     fprintf(stdout, "exp(0.0) - 1.0 = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_log(elemCount, env->xMin, X);
     xf_truncate(elemCount, X, X);
     xf_exp(elemCount, X, Y);
     fprintf(stdout, "exp(");
-    xf_print(elemCount, X);
+    xf_print(elemCount, X, U32_MAX);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_log(elemCount, env->xMax, X);
     xf_truncate(elemCount, X, X);
     xf_exp(elemCount, X, Y);
     fprintf(stdout, "exp(");
-    xf_print(elemCount, X);
+    xf_print(elemCount, X, U32_MAX);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_naive_div2(elemCount, X);
     xf_copy(elemCount, X, V);
@@ -906,13 +906,13 @@ test_exp(Environment *env, u32 elemCount)
     xf_exp(elemCount, V, Z);
     xf_mul(elemCount, Z, Z, Z);
     fprintf(stdout, "If exp(");
-    xf_print(elemCount, X);
+    xf_print(elemCount, X, U32_MAX);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, " is not about\n   exp(");
-    xf_print(elemCount, V);
+    xf_print(elemCount, V, U32_MAX);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, " there is an argument reduction error\n");
 
     // NOTE(michiel): Error tests
@@ -925,7 +925,7 @@ test_exp(Environment *env, u32 elemCount)
     fprintf(stdout, "\n");
     xf_exp(elemCount, X, Y);
     fprintf(stdout, "exp returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_negate(elemCount, X);
     fprintf(stdout, "exp() will be called with the argument ");
@@ -933,7 +933,7 @@ test_exp(Environment *env, u32 elemCount)
     fprintf(stdout, "\n");
     xf_exp(elemCount, X, Y);
     fprintf(stdout, "exp returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of exp\n\n");
@@ -1239,7 +1239,7 @@ test_pow(Environment *env, u32 elemCount)
         fprintf(stdout, ", ");
         xf_print(elemCount, Y, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, W);
+        xf_print(elemCount, W, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -1253,7 +1253,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // No error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
     xf_from_s32(elemCount, env->maxExp - 1, Y);
     xf_print(elemCount, X, 4);
@@ -1262,7 +1262,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // No error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
     xf_clear(elemCount, X);
     xf_copy(elemCount, gXF_Two, Y);
@@ -1272,7 +1272,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // No error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, Y, X);
     xf_negate(elemCount, X);
@@ -1283,7 +1283,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // Error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, gXF_Two, Y);
     xf_print(elemCount, X, 4);
@@ -1292,7 +1292,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // Error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
     xf_clear(elemCount, X);
     xf_clear(elemCount, Y);
@@ -1302,7 +1302,7 @@ test_pow(Environment *env, u32 elemCount)
     fprintf(stdout, " will be computed.\n"); // Error
     xf_pow(elemCount, X, Y, Z);
     fprintf(stdout, "pow returned the value ");
-    xf_print(elemCount, Z);
+    xf_print(elemCount, Z, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of pow\n\n");
@@ -1541,7 +1541,7 @@ test_sincos(Environment *env, u32 elemCount)
         xf_add(elemCount, Z, Y, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -1556,7 +1556,7 @@ test_sincos(Environment *env, u32 elemCount)
         xf_sub(elemCount, X, Z, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
         xf_div(elemCount, X, gXF_Two, X);
     }
@@ -1572,7 +1572,7 @@ test_sincos(Environment *env, u32 elemCount)
         xf_sub(elemCount, Z, Y, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -1586,7 +1586,7 @@ test_sincos(Environment *env, u32 elemCount)
     fprintf(stdout, "sin(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     fprintf(stdout, "\nThe following three lines illustrate the loss in significance for large arguments. The arguments are consecutive.\n");
     xf_square_root(elemCount, BETAP, Z);
@@ -1596,13 +1596,13 @@ test_sincos(Environment *env, u32 elemCount)
     fprintf(stdout, "sin(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_sin(elemCount, Z, Y);
     fprintf(stdout, "sin(");
     xf_print(elemCount, Z, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_add(elemCount, gXF_One, env->eps, X);
     xf_mul(elemCount, X, Z, X);
@@ -1610,7 +1610,7 @@ test_sincos(Environment *env, u32 elemCount)
     fprintf(stdout, "sin(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     // NOTE(michiel): Error tests
@@ -1622,7 +1622,7 @@ test_sincos(Environment *env, u32 elemCount)
     fprintf(stdout, "\n"); // error
     xf_sin(elemCount, X, Y);
     fprintf(stdout, "sin returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of sin/cos\n\n");
@@ -1861,7 +1861,7 @@ test_tancot(Environment *env, u32 elemCount)
         xf_add(elemCount, Z, Y, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -1877,7 +1877,7 @@ test_tancot(Environment *env, u32 elemCount)
         xf_sub(elemCount, X, Z, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
         xf_div(elemCount, X, gXF_Two, X);
     }
@@ -1892,7 +1892,7 @@ test_tancot(Environment *env, u32 elemCount)
     fprintf(stdout, "tan(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     u32 tan11_C0[elemCount];
@@ -1918,7 +1918,7 @@ test_tancot(Environment *env, u32 elemCount)
     fprintf(stdout, "\ntan(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     xf_add(elemCount, AIT, Z, W);
@@ -1936,7 +1936,7 @@ test_tancot(Environment *env, u32 elemCount)
     fprintf(stdout, "\n"); // no error
     xf_tan(elemCount, X, Y);
     fprintf(stdout, "tan returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
     xf_copy(elemCount, BETAP, X);
     fprintf(stdout, "tan() will be called with the argument ");
@@ -1944,7 +1944,7 @@ test_tancot(Environment *env, u32 elemCount)
     fprintf(stdout, "\n"); // error
     xf_tan(elemCount, X, Y);
     fprintf(stdout, "tan returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of tan/cot\n\n"); // 1100
@@ -2246,7 +2246,7 @@ test_asincos(Environment *env, u32 elemCount)
         xf_add(elemCount, Z, Y, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
     }
 
@@ -2262,7 +2262,7 @@ test_asincos(Environment *env, u32 elemCount)
         xf_sub(elemCount, X, Z, Z);
         xf_print(elemCount, X, 8);
         fprintf(stdout, ", ");
-        xf_print(elemCount, Z);
+        xf_print(elemCount, Z, U32_MAX);
         fprintf(stdout, "\n");
         xf_div(elemCount, X, gXF_Two, X);
     }
@@ -2277,7 +2277,7 @@ test_asincos(Environment *env, u32 elemCount)
     fprintf(stdout, "asin(");
     xf_print(elemCount, X, 6);
     fprintf(stdout, ") = ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     // NOTE(michiel): Error tests
@@ -2288,7 +2288,7 @@ test_asincos(Environment *env, u32 elemCount)
     fprintf(stdout, "\n"); // error
     xf_asin(elemCount, X, Y);
     fprintf(stdout, "asin returned the value ");
-    xf_print(elemCount, Y);
+    xf_print(elemCount, Y, U32_MAX);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\nThis concludes the tests of asin/acos\n\n"); // 1100

@@ -1,12 +1,25 @@
-#include "../libberdip/src/platform.h"
+#include "../libberdip/src/common.h"
+#include "../libberdip/src/maps.h"
+#include <math.h>
+#define pow(...) powf(__VA_ARGS__)
+#include "../libberdip/src/strings.h"
 
 #include "xfloat.h"
 #include "xfloat_math.h"
-#include "xfloat.cpp"
-#include "xfloat_constants_16.cpp"
-#include "xfloat_string.cpp"
-#include "xfloat_math.cpp"
-#include "xfloat_custom.cpp"
+#include "xfloat.c"
+#include "xfloat_constants_16.c"
+#include "xfloat_string.c"
+#include "xfloat_math.c"
+#include "xfloat_custom.c"
+
+internal f32
+map(f32 value, f32 fromMin, f32 fromMax, f32 toMin, f32 toMax)
+{
+    f32 result;
+    result = (value - fromMin) / (fromMax - fromMin);
+    result = result * (toMax - toMin) + toMin;
+    return result;
+}
 
 s32 main(s32 argc, char **argv)
 {
@@ -155,7 +168,7 @@ s32 main(s32 argc, char **argv)
     //
     // NOTE(michiel): TABLE GEN
     //
-    u32 testNew[10] = {};
+    u32 testNew[10] = {0};
     u32 testNew2[10];
 
     testNew[0] = XFLOAT_EXP_BIAS + 4;
@@ -921,13 +934,13 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "  osqrt(2.0) = %.*s\n", STR_FMT(aStr));
 
     xf_copy(elemCount, gXF_Two, b);
-    xf_tst_square_root(elemCount, b, b);
+    xf_tst_square_root(elemCount, b, b, 8);
     aStr = string_from_xf(elemCount, b, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  nsqrt(2.0) = %.*s\n", STR_FMT(aStr));
 
-    xf_print_raw(elemCount, gXF_Sqrt2);
-    xf_print_raw(elemCount, a);
-    xf_print_raw(elemCount, b);
+    xf_print_raw(elemCount, gXF_Sqrt2, true);
+    xf_print_raw(elemCount, a, true);
+    xf_print_raw(elemCount, b, true);
 
     aStr = string_from_xf(elemCount, gXF_SquareRootCoef2, U32_MAX, array_count(aBuf), aBuf);
     fprintf(stdout, "  c2sqrt = %.*s\n", STR_FMT(aStr));

@@ -1,4 +1,9 @@
-#include "../libberdip/src/platform.h"
+//#include "../libberdip/src/platform.h"
+#include "../libberdip/src/common.h"
+#include <math.h>
+#define pow(...) powf(__VA_ARGS__)
+#include "../libberdip/src/maps.h"
+#include "../libberdip/src/strings.h"
 
 #ifndef EXTENDED_PRECISION_FULL
 #define EXTENDED_PRECISION_FULL  0
@@ -67,11 +72,11 @@ global u32 *gXF_SquareRootCoef2;
 
 #include "xfloat.h"
 #include "xfloat_math.h"
-#include "xfloat.cpp"
-#include "xfloat_math.cpp"
-#include "xfloat_string.cpp"
+#include "xfloat.c"
+#include "xfloat_math.c"
+#include "xfloat_string.c"
 
-#include "xfloat_gen_strings.cpp"
+#include "xfloat_gen_strings.c"
 
 // NOTE(michiel): This can generate the values needed to parse strings as xfloats and outputs them to a file.
 // It will also parse in common values from xfloat_gen_strings
@@ -239,15 +244,15 @@ s32 main(s32 argc, char **argv)
 
     if (argc > 1)
     {
-        elemCount = number_from_string(string(argv[1]));
+        elemCount = number_from_string(string(string_length(argv[1]), argv[1]));
     }
 
-    u32 *tenA = allocate_array(u32, elemCount);
-    u32 *tenB = allocate_array(u32, elemCount);
+    u32 *tenA = allocate_array(u32, elemCount, 0);
+    u32 *tenB = allocate_array(u32, elemCount, 0);
 
     u8 outputFilenameBuf[128];
     String outputFilename = string_fmt(array_count(outputFilenameBuf), outputFilenameBuf,
-                                       "xfloat_constants_%u.cpp", elemCount);
+                                       "xfloat_constants_%u.c", elemCount);
     FILE *fileOutput = fopen(to_cstring(outputFilename), "wb");
 
     // NOTE(michiel): Init a to 10
@@ -287,7 +292,7 @@ s32 main(s32 argc, char **argv)
     xf_set_exponent(elemCount, tenB, XFLOAT_EXP_BIAS + 1);
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
-    gXF_Tens = allocate_array(u32, genTens * elemCount);
+    gXF_Tens = allocate_array(u32, genTens * elemCount, 0);
     fprintf(fileOutput, "global u32 gXF_Tens[%u][%u] = {\n", genTens, elemCount);
 
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
@@ -311,7 +316,7 @@ s32 main(s32 argc, char **argv)
     xf_set_exponent(elemCount, tenB, XFLOAT_EXP_BIAS + 1);
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
-    gXF_Tenths = allocate_array(u32, genTens * elemCount);
+    gXF_Tenths = allocate_array(u32, genTens * elemCount, 0);
     fprintf(fileOutput, "global u32 gXF_Tenths[%u][%u] = {\n", genTens, elemCount);
     xf_div(elemCount, tenB, tenA, tenA);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
@@ -335,116 +340,116 @@ s32 main(s32 argc, char **argv)
     fprintf(fileOutput, "\n");
 
     // NOTE(michiel): Print 0
-    gXF_Zero = allocate_array(u32, elemCount);
-    generate_named_value(fileOutput, elemCount, string("0.0e0"), gXF_Zero);
+    gXF_Zero = allocate_array(u32, elemCount, 0);
+    generate_named_value(fileOutput, elemCount, stringc("0.0e0"), gXF_Zero);
 
     // NOTE(michiel): Print 1
-    gXF_One = allocate_array(u32, elemCount);
+    gXF_One = allocate_array(u32, elemCount, 0);
     xf_set_exponent(elemCount, gXF_One, XFLOAT_EXP_BIAS + 1);
     gXF_One[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
-    generate_named_value(fileOutput, elemCount, string("1.0e0"), gXF_One);
+    generate_named_value(fileOutput, elemCount, stringc("1.0e0"), gXF_One);
 
     // NOTE(michiel): Print 0.5
-    gXF_Half = allocate_array(u32, elemCount);
+    gXF_Half = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_One, gXF_Half);
     xf_naive_div2(elemCount, gXF_Half);
-    generate_named_value(fileOutput, elemCount, string("0.5e0"), gXF_Half);
+    generate_named_value(fileOutput, elemCount, stringc("0.5e0"), gXF_Half);
 
     // NOTE(michiel): Print 2.0
-    gXF_Two = allocate_array(u32, elemCount);
+    gXF_Two = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_One, gXF_Two);
     xf_naive_mul2(elemCount, gXF_Two);
-    generate_named_value(fileOutput, elemCount, string("2.0e0"), gXF_Two);
+    generate_named_value(fileOutput, elemCount, stringc("2.0e0"), gXF_Two);
 
     // NOTE(michiel): Print 3.0
-    gXF_Three = allocate_array(u32, elemCount);
+    gXF_Three = allocate_array(u32, elemCount, 0);
     xf_add(elemCount, gXF_One, gXF_Two, gXF_Three);
-    generate_named_value(fileOutput, elemCount, string("3.0e0"), gXF_Three);
+    generate_named_value(fileOutput, elemCount, stringc("3.0e0"), gXF_Three);
 
     // NOTE(michiel): Print 4.0
-    gXF_Four = allocate_array(u32, elemCount);
+    gXF_Four = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_Two, gXF_Four);
     xf_naive_mul2(elemCount, gXF_Four);
-    generate_named_value(fileOutput, elemCount, string("4.0e0"), gXF_Four);
+    generate_named_value(fileOutput, elemCount, stringc("4.0e0"), gXF_Four);
 
     // NOTE(michiel): Print 5.0
-    gXF_Five = allocate_array(u32, elemCount);
+    gXF_Five = allocate_array(u32, elemCount, 0);
     xf_add(elemCount, gXF_Four, gXF_One, gXF_Five);
-    generate_named_value(fileOutput, elemCount, string("5.0e0"), gXF_Five);
+    generate_named_value(fileOutput, elemCount, stringc("5.0e0"), gXF_Five);
 
     // NOTE(michiel): Print 6.0
-    gXF_Six = allocate_array(u32, elemCount);
+    gXF_Six = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_Three, gXF_Six);
     xf_naive_mul2(elemCount, gXF_Six);
-    generate_named_value(fileOutput, elemCount, string("6.0e0"), gXF_Six);
+    generate_named_value(fileOutput, elemCount, stringc("6.0e0"), gXF_Six);
 
     // NOTE(michiel): Print 7.0
-    gXF_Seven = allocate_array(u32, elemCount);
+    gXF_Seven = allocate_array(u32, elemCount, 0);
     xf_add(elemCount, gXF_Six, gXF_One, gXF_Seven);
-    generate_named_value(fileOutput, elemCount, string("7.0e0"), gXF_Seven);
+    generate_named_value(fileOutput, elemCount, stringc("7.0e0"), gXF_Seven);
 
     // NOTE(michiel): Print 8.0
-    gXF_Eight = allocate_array(u32, elemCount);
+    gXF_Eight = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_Four, gXF_Eight);
     xf_naive_mul2(elemCount, gXF_Eight);
-    generate_named_value(fileOutput, elemCount, string("8.0e0"), gXF_Eight);
+    generate_named_value(fileOutput, elemCount, stringc("8.0e0"), gXF_Eight);
 
     // NOTE(michiel): Print 9.0
-    gXF_Nine = allocate_array(u32, elemCount);
+    gXF_Nine = allocate_array(u32, elemCount, 0);
     xf_add(elemCount, gXF_Eight, gXF_One, gXF_Nine);
-    generate_named_value(fileOutput, elemCount, string("9.0e0"), gXF_Nine);
+    generate_named_value(fileOutput, elemCount, stringc("9.0e0"), gXF_Nine);
 
     // NOTE(michiel): Print -2.0
-    gXF_NegativeTwo = allocate_array(u32, elemCount);
+    gXF_NegativeTwo = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_Two, gXF_NegativeTwo);
     xf_negate(elemCount, gXF_NegativeTwo);
-    generate_named_value(fileOutput, elemCount, string("-2.0e0"), gXF_NegativeTwo);
+    generate_named_value(fileOutput, elemCount, stringc("-2.0e0"), gXF_NegativeTwo);
 
     fprintf(fileOutput, "\n");
 
     // NOTE(michiel): Constants from a string definition
 
     // NOTE(michiel): Print pi
-    gXF_Pi = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gPiString, string("pi"), gXF_Pi);
+    gXF_Pi = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gPiString, stringc("pi"), gXF_Pi);
 
     // NOTE(michiel): Print pi/2
-    gXF_PiOver2 = allocate_array(u32, elemCount);
+    gXF_PiOver2 = allocate_array(u32, elemCount, 0);
     xf_copy(elemCount, gXF_Pi, gXF_PiOver2);
     xf_naive_div2(elemCount, gXF_PiOver2);
-    generate_named_value(fileOutput, elemCount, string("pi/2"), gXF_PiOver2);
+    generate_named_value(fileOutput, elemCount, stringc("pi/2"), gXF_PiOver2);
 
     // NOTE(michiel): Print sqrt(2)
-    gXF_Sqrt2 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gSqrt2String, string("sqrt(2)"), gXF_Sqrt2);
+    gXF_Sqrt2 = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gSqrt2String, stringc("sqrt(2)"), gXF_Sqrt2);
 
     // NOTE(michiel): Print log(2)
-    gXF_Log2 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog2String, string("log(2)"), gXF_Log2);
+    gXF_Log2 = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gLog2String, stringc("log(2)"), gXF_Log2);
 
     // NOTE(michiel): Print log(10)
-    gXF_Log10 = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog10String, string("log(10)"), gXF_Log10);
+    gXF_Log10 = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gLog10String, stringc("log(10)"), gXF_Log10);
 
     // NOTE(michiel): Print log2(e)
-    gXF_Log2e = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog2eString, string("log2(e)"), gXF_Log2e);
+    gXF_Log2e = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gLog2eString, stringc("log2(e)"), gXF_Log2e);
 
     // NOTE(michiel): Print log10(e)
-    gXF_Log10e = allocate_array(u32, elemCount);
-    generate_value_from_string(fileOutput, elemCount, gLog10eString, string("log10(e)"), gXF_Log10e);
+    gXF_Log10e = allocate_array(u32, elemCount, 0);
+    generate_value_from_string(fileOutput, elemCount, gLog10eString, stringc("log10(e)"), gXF_Log10e);
 
     // NOTE(michiel): Print tan(pi/8)
     // TODO(michiel): Or should this come from a string as well?
     // It should offer more precision as the minus one here will introduce a unknown bit at the lower end.
-    gXF_TanPiOver8 = allocate_array(u32, elemCount);
+    gXF_TanPiOver8 = allocate_array(u32, elemCount, 0);
     xf_sub(elemCount, gXF_Sqrt2, gXF_One, gXF_TanPiOver8);
-    generate_named_value(fileOutput, elemCount, string("tan(pi/8) = sqrt(2) - 1"), gXF_TanPiOver8);
+    generate_named_value(fileOutput, elemCount, stringc("tan(pi/8) = sqrt(2) - 1"), gXF_TanPiOver8);
 
     // NOTE(michiel): Print tan(3pi/8)
-    gXF_Tan3PiOver8 = allocate_array(u32, elemCount);
+    gXF_Tan3PiOver8 = allocate_array(u32, elemCount, 0);
     xf_add(elemCount, gXF_Sqrt2, gXF_One, gXF_Tan3PiOver8);
-    generate_named_value(fileOutput, elemCount, string("tan(3pi/8) = sqrt(2) + 1"), gXF_Tan3PiOver8);
+    generate_named_value(fileOutput, elemCount, stringc("tan(3pi/8) = sqrt(2) + 1"), gXF_Tan3PiOver8);
 
     fprintf(fileOutput, "\n");
 
@@ -453,7 +458,7 @@ s32 main(s32 argc, char **argv)
     fprintf(fileOutput, "// TODO(generator): Calculate these from scratch\n"
             "// These are polynomial coefficients that approximate the square root function\n"
             "// in the range of [0.5, 1.0].\n");
-    gXF_SquareRootCoef0 = allocate_array(u32, elemCount);
+    gXF_SquareRootCoef0 = allocate_array(u32, elemCount, 0);
     {
         i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
         xf_set_exponent(elemCount, gXF_SquareRootCoef0, XFLOAT_EXP_BIAS - 1);
@@ -461,7 +466,7 @@ s32 main(s32 argc, char **argv)
         gXF_SquareRootCoef0[XFLOAT_MANTISSA_IDX + 2] = 0xD5FFE300;
         generate_value(fileOutput, elemCount, gXF_SquareRootCoef0);
     }
-    gXF_SquareRootCoef1 = allocate_array(u32, elemCount);
+    gXF_SquareRootCoef1 = allocate_array(u32, elemCount, 0);
     {
         i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
         xf_set_exponent(elemCount, gXF_SquareRootCoef1, XFLOAT_EXP_BIAS);
@@ -469,7 +474,7 @@ s32 main(s32 argc, char **argv)
         gXF_SquareRootCoef1[XFLOAT_MANTISSA_IDX + 2] = 0x4C146700;
         generate_value(fileOutput, elemCount, gXF_SquareRootCoef1);
     }
-    gXF_SquareRootCoef2 = allocate_array(u32, elemCount);
+    gXF_SquareRootCoef2 = allocate_array(u32, elemCount, 0);
     {
         i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
         xf_make_negative(elemCount, gXF_SquareRootCoef2);
@@ -491,8 +496,8 @@ s32 main(s32 argc, char **argv)
 
     deallocate(tenA);
     deallocate(tenB);
-    tenA = allocate_array(u32, expandedCount);
-    tenB = allocate_array(u32, expandedCount);
+    tenA = allocate_array(u32, expandedCount, 0);
+    tenB = allocate_array(u32, expandedCount, 0);
 
     xf_clear(expandedCount, tenA);
     xf_clear(expandedCount, tenB);
@@ -502,7 +507,7 @@ s32 main(s32 argc, char **argv)
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
     deallocate(gXF_Tens);
-    gXF_Tens = allocate_array(u32, genTens * expandedCount);
+    gXF_Tens = allocate_array(u32, genTens * expandedCount, 0);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
         xf_mul(expandedCount, tenA, tenB, tenA);
@@ -518,7 +523,7 @@ s32 main(s32 argc, char **argv)
     tenB[XFLOAT_MANTISSA_IDX + 1] = 0x80000000;
 
     deallocate(gXF_Tenths);
-    gXF_Tenths = allocate_array(u32, genTens * expandedCount);
+    gXF_Tenths = allocate_array(u32, genTens * expandedCount, 0);
     xf_div(expandedCount, tenB, tenA, tenA);
     for (u32 tenIdx = 0; tenIdx < genTens; ++tenIdx)
     {
@@ -527,18 +532,18 @@ s32 main(s32 argc, char **argv)
         xf_mul(expandedCount, tenA, tenB, tenA);
     }
 
-    gXF_PiOver2Upper = allocate_array(u32, elemCount);
-    gXF_PiOver2Lower = allocate_array(u32, elemCount);
-    gXF_Log2Upper = allocate_array(u32, elemCount);
-    gXF_Log2Lower = allocate_array(u32, elemCount);
-    gXF_Log2eUpper = allocate_array(u32, elemCount);
-    gXF_Log2eLower = allocate_array(u32, elemCount);
-    gXF_Log10eUpper = allocate_array(u32, elemCount);
-    gXF_Log10eLower = allocate_array(u32, elemCount);
-    generate_upper_lower_from_string_div2(fileOutput, elemCount, gPiString, string("pi/2"), gXF_PiOver2Upper, gXF_PiOver2Lower);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog2String, string("log(2)"), gXF_Log2Upper, gXF_Log2Lower);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog2eString, string("log2(e)"), gXF_Log2eUpper, gXF_Log2eLower);
-    generate_upper_lower_from_string(fileOutput, elemCount, gLog10eString, string("log10(e)"), gXF_Log10eUpper, gXF_Log10eLower);
+    gXF_PiOver2Upper = allocate_array(u32, elemCount, 0);
+    gXF_PiOver2Lower = allocate_array(u32, elemCount, 0);
+    gXF_Log2Upper = allocate_array(u32, elemCount, 0);
+    gXF_Log2Lower = allocate_array(u32, elemCount, 0);
+    gXF_Log2eUpper = allocate_array(u32, elemCount, 0);
+    gXF_Log2eLower = allocate_array(u32, elemCount, 0);
+    gXF_Log10eUpper = allocate_array(u32, elemCount, 0);
+    gXF_Log10eLower = allocate_array(u32, elemCount, 0);
+    generate_upper_lower_from_string_div2(fileOutput, elemCount, gPiString, stringc("pi/2"), gXF_PiOver2Upper, gXF_PiOver2Lower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog2String, stringc("log(2)"), gXF_Log2Upper, gXF_Log2Lower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog2eString, stringc("log2(e)"), gXF_Log2eUpper, gXF_Log2eLower);
+    generate_upper_lower_from_string(fileOutput, elemCount, gLog10eString, stringc("log10(e)"), gXF_Log10eUpper, gXF_Log10eLower);
 
     fprintf(fileOutput, "\n");
     fclose(fileOutput);

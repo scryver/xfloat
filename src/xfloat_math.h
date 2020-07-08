@@ -5,7 +5,8 @@ internal void   xf_ceil(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_round(u32 elemCount, u32 *src, u32 *dst);
 
 // NOTE(michiel): Good starting value for iterations is elemCount / 2, but could maybe be even lower
-internal void   xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8);
+internal void   xf_square_root(u32 elemCount, u32 *src, u32 *dst);
+internal void   xf_square_root_prec(u32 elemCount, u32 *src, u32 *dst, u32 iterations);
 internal void   xf_log(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_log2(u32 elemCount, u32 *src, u32 *dst);
 internal void   xf_log10(u32 elemCount, u32 *src, u32 *dst);

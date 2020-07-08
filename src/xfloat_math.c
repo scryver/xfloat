@@ -195,7 +195,13 @@ xf_round(u32 elemCount, u32 *src, u32 *dst)
 }
 
 internal void
-xf_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
+xf_square_root(u32 elemCount, u32 *src, u32 *dst)
+{
+    xf_square_root_prec(elemCount, src, dst, 8);
+}
+
+internal void
+xf_square_root_prec(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
 {
     if (xf_get_sign(elemCount, src))                           // X < 0
     {

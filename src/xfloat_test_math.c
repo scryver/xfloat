@@ -1,21 +1,39 @@
 #include <time.h>
 
-#include "../libberdip/src/platform.h"
+#include "../libberdip/src/common.h"
+#include "../libberdip/src/maps.h"
+#include <math.h>
+#define pow(...) powf(__VA_ARGS__)
+#define square_root(...) sqrtf(__VA_ARGS__)
+#include "../libberdip/src/strings.h"
+
+internal u32
+rotate_right(u32 value, s32 amount)
+{
+#if COMPILER_MSVC
+    u32 result = _rotl(value, amount);
+#else
+    amount &= 31;
+    u32 result = (value >> amount) | (value << (32 - amount));
+#endif
+    return result;
+}
+
 #include "../libberdip/src/random.h"
 
 #include "xfloat.h"
 #include "xfloat_math.h"
-#include "xfloat.cpp"
-#include "xfloat_constants_16.cpp"
-#include "xfloat_string.cpp"
-#include "xfloat_math.cpp"
-#include "xfloat_rand.cpp"
+#include "xfloat.c"
+#include "xfloat_constants_16.c"
+#include "xfloat_string.c"
+#include "xfloat_math.c"
+#include "xfloat_rand.c"
 
 #define ELEMENT_COUNT   16
 
-#include "elementary_test.cpp"
+#include "elementary_test.c"
 
-struct Stats
+typedef struct Stats
 {
     u32 minErr[ELEMENT_COUNT];
     u32 avgErr[ELEMENT_COUNT];
@@ -26,7 +44,7 @@ struct Stats
 
     struct timespec start;
     struct timespec end;
-};
+} Stats;
 
 internal struct timespec
 get_wall_clock(void)
@@ -172,7 +190,7 @@ test_square_root_base_error(u32 testCount, Stats *errorStats)
         xf_random_map(series, ELEMENT_COUNT, inputOffset, inputRange, input);
         xf_mul(ELEMENT_COUNT, input, input, error);
 
-        xf_square_root(ELEMENT_COUNT, error, error, 6);
+        xf_square_root_prec(ELEMENT_COUNT, error, error, 6);
 
         xf_sub(ELEMENT_COUNT, error, input, error);
         xf_div(ELEMENT_COUNT, error, input, error);
@@ -209,7 +227,7 @@ test_square_root_1_to_2(u32 testCount, Stats *errorStats)
         xf_random_map(series, ELEMENT_COUNT, inputOffset, inputRange, input);
         xf_mul(ELEMENT_COUNT, input, input, error);
 
-        xf_square_root(ELEMENT_COUNT, error, error, 6);
+        xf_square_root_prec(ELEMENT_COUNT, error, error, 6);
 
         xf_sub(ELEMENT_COUNT, error, input, error);
         xf_div(ELEMENT_COUNT, error, input, error);
@@ -482,7 +500,7 @@ test_exp_base_error(u32 testCount, Stats *errorStats)
         xf_random_map(series, ELEMENT_COUNT, inputOffset, inputRange, input);
         xf_mul(ELEMENT_COUNT, input, input, error);
 
-        xf_square_root(ELEMENT_COUNT, error, error, 6);
+        xf_square_root_prec(ELEMENT_COUNT, error, error, 6);
 
         xf_sub(ELEMENT_COUNT, error, input, error);
         xf_div(ELEMENT_COUNT, error, input, error);
@@ -496,7 +514,7 @@ test_exp_base_error(u32 testCount, Stats *errorStats)
 
 int main(int argc, char **argv)
 {
-    u32 testBit[ELEMENT_COUNT] = {};
+    u32 testBit[ELEMENT_COUNT] = {0};
     testBit[ELEMENT_COUNT - 1] = 0x1;
     s32 shiftCount;
     xf_normalize_mantissa(ELEMENT_COUNT, testBit, &shiftCount);
@@ -540,16 +558,16 @@ int main(int argc, char **argv)
     //
     //
 
-    Arena arena = {};
-    Environment env = {};
+    Arena arena = {0};
+    Environment env = {0};
     init_environment(&env, ELEMENT_COUNT, &arena);
 
-    //test_square_root(&env, ELEMENT_COUNT);
-    //test_log(&env, ELEMENT_COUNT);
-    //test_exp(&env, ELEMENT_COUNT);
-    //test_pow(&env, ELEMENT_COUNT);
-    //test_sincos(&env, ELEMENT_COUNT);
-    //test_tancot(&env, ELEMENT_COUNT);
+    test_square_root(&env, ELEMENT_COUNT);
+    test_log(&env, ELEMENT_COUNT);
+    test_exp(&env, ELEMENT_COUNT);
+    test_pow(&env, ELEMENT_COUNT);
+    test_sincos(&env, ELEMENT_COUNT);
+    test_tancot(&env, ELEMENT_COUNT);
     test_asincos(&env, ELEMENT_COUNT);
 
     return 0;

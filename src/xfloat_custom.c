@@ -1,5 +1,5 @@
 internal void
-xf_tst_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations = 8)
+xf_tst_square_root(u32 elemCount, u32 *src, u32 *dst, u32 iterations)
 {
     if (xf_get_exponent(elemCount, src))
     {
