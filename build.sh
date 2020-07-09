@@ -5,7 +5,7 @@ set -e
 curDir="$(pwd)"
 codeDir="$curDir/src"
 buildDir="$curDir/gebouw"
-compiler=tcc
+compiler=clang
 
 cflags="-O3 -g -ggdb -Wall -Werror -pedantic -lm"
 cppflags="-O0 -g -ggdb -Wall -Werror -pedantic -std=c++11 -lm"
@@ -19,7 +19,7 @@ echo Building "xfloat"
 pushd "$buildDir" > /dev/null
     $compiler $cflags $exceptions "$codeDir/xfloat_gen_constants.c" -o xfloat-const-gen
     ./xfloat-const-gen
-    cp xfloat_constants_*.cpp "$codeDir/"
+    cp xfloat_constants_*.c "$codeDir/"
 
     $compiler $cflags $exceptions "$codeDir/xfloat_test.c" -o xfloat-test
     $compiler $cflags $exceptions "$codeDir/xfloat_test_math.c" -o xfloat-math-test

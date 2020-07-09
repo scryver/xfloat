@@ -14,32 +14,32 @@ xf_from_string(u32 elemCount, String string, u32 *x)
         (to_lower_case(string.data[1]) == 'x'))
     {
         base = 16;
-        string = advance(string, 2);
+        advance(&string, 2);
     }
     else if ((string.size > 1) &&
              (string.data[0] == '0') &&
              (to_lower_case(string.data[1]) == 'b'))
     {
         base = 2;
-        string = advance(string, 2);
+        advance(&string, 2);
     }
     else if ((string.size > 1) &&
              (string.data[0] == '0') &&
              is_digit(string.data[1]))
     {
         base = 8;
-        string = advance(string, 2);
+        advance(&string, 2);
     }
 
     u32 numberSign = 0;
     if (string.size && (string.data[0] == '-'))
     {
         numberSign = XFLOAT_SIGN_MASK;
-        string = advance(string, 1);
+        advance(&string, 1);
     }
     else if (string.size && (string.data[0] == '+'))
     {
-        string = advance(string, 1);
+        advance(&string, 1);
     }
 
     if (!is_hex_digit(string.data[0]))
@@ -91,7 +91,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
             parseError = true;
         }
 
-        string = advance(string, 1);
+        advance(&string, 1);
 
         if (string.data[0] == '.')
         {
@@ -99,7 +99,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
                 parseError = true;
             } else {
                 decimalPoint = 1;
-                string = advance(string, 1);
+                advance(&string, 1);
             }
         }
     }
@@ -115,7 +115,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
          (to_lower_case(string.data[0]) == 'p')))
     {
         b32 isZero = true;
-        string = advance(string, 1);
+        advance(&string, 1);
 
         /* 0.0eXXX is zero, regardless of XXX.  Check for the 0.0. */
         for (u32 index = 0; index < elemCount + 1; ++index)
@@ -132,11 +132,11 @@ xf_from_string(u32 elemCount, String string, u32 *x)
             if (string.size && string.data[0] == '-')
             {
                 esign = -1;
-                string = advance(string, 1);
+                advance(&string, 1);
             }
             else if (string.size && string.data[0] == '+')
             {
-                string = advance(string, 1);
+                advance(&string, 1);
             }
 
             while (!parseError && string.size && is_digit(string.data[0]))
@@ -153,7 +153,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
                 }
                 exp *= 10;
                 exp += string.data[0] & 0xF;
-                string = advance(string, 1);
+                advance(&string, 1);
             }
 
             if (esign < 0) {
