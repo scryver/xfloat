@@ -4,6 +4,32 @@
 //
 
 internal void
+xf_shift_up32(u32 elemCount, u32 *x)
+{
+    x += elemCount - 1;
+    u32 oldBits = 0;
+    for (u32 index = 0; index < elemCount - XFLOAT_MANTISSA_IDX; ++index)
+    {
+        u32 newBits = *x;
+        *x-- = oldBits;
+        oldBits = newBits;
+    }
+}
+
+internal void
+xf_shift_down32(u32 elemCount, u32 *x)
+{
+    x += XFLOAT_MANTISSA_IDX;
+    u32 oldBits = 0;
+    for (u32 index = 0; index < elemCount - XFLOAT_MANTISSA_IDX; ++index)
+    {
+        u32 newBits = *x;
+        *x++ = oldBits;
+        oldBits = newBits;
+    }
+}
+
+internal void
 xf_shift_up16(u32 elemCount, u32 *x)
 {
     x += elemCount - 1;
@@ -160,7 +186,16 @@ xf_shift(u32 elemCount, u32 *x, s32 *shiftCount)
         {
             p = x + elemCount - 1;
             shifts = -shifts;
-            while (shifts >= 16)
+            while (shifts >= 32)
+            {
+#if XFLOAT_STICKY_BIT
+                lost |= *p;
+#endif
+                xf_shift_down32(elemCount, x);
+                shifts -= 32;
+            }
+
+            if (shifts >= 16)
             {
 #if XFLOAT_STICKY_BIT
                 lost |= *p;
@@ -197,7 +232,7 @@ xf_shift(u32 elemCount, u32 *x, s32 *shiftCount)
             }
 
             // TODO(michiel): Can be an if, I guess...
-            while (shifts > 0)
+            if (shifts > 0)
             {
 #if XFLOAT_STICKY_BIT
                 lost |= *p & 1;
@@ -208,7 +243,13 @@ xf_shift(u32 elemCount, u32 *x, s32 *shiftCount)
         }
         else
         {
-            while (shifts >= 16)
+            while (shifts >= 32)
+            {
+                xf_shift_up32(elemCount, x);
+                shifts -= 32;
+            }
+
+            if (shifts >= 16)
             {
                 xf_shift_up16(elemCount, x);
                 shifts -= 16;
@@ -232,7 +273,7 @@ xf_shift(u32 elemCount, u32 *x, s32 *shiftCount)
                 shifts -= 2;
             }
 
-            while (shifts > 0)
+            if (shifts > 0)
             {
                 xf_shift_up1(elemCount, x);
                 shifts -= 1;
@@ -1002,6 +1043,23 @@ xf_maximum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 }
 
 internal void
+xf_and(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+{
+
+}
+
+internal void
+xf_or(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+{
+
+}
+internal void
+xf_xor(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
+{
+
+}
+
+internal void
 xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 + src2
@@ -1118,6 +1176,12 @@ xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
             }
         }
     }
+}
+
+internal void
+xf_sqr(u32 elemCount, u32 *src, u32 *dst)
+{
+    xf_mul(elemCount, src, src, dst);
 }
 
 internal void

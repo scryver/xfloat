@@ -37,9 +37,14 @@ internal b32    xf_is_infinite(u32 elemCount, u32 *x);
 
 internal void   xf_minimum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);   // NOTE(michiel): dst = src1 < src2 ? src1 : src2
 internal void   xf_maximum(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);   // NOTE(michiel): dst = src1 > src2 ? src1 : src2
+
+internal void   xf_and(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 & src2
+internal void   xf_or(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);        // NOTE(michiel): dst = src1 | src2
+internal void   xf_xor(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 ^ src2
 internal void   xf_add(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 + src2
 internal void   xf_sub(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 - src2
 internal void   xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 * src2
+internal void   xf_sqr(u32 elemCount, u32 *src, u32 *dst);                   // NOTE(michiel): dst = src^2
 internal void   xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst);       // NOTE(michiel): dst = src1 / src2
 internal s64    xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction); // NOTE(michiel): integer part returned, remaining fraction in fraction array
 internal s32    xf_compare(u32 elemCount, u32 *src1, u32 *src2);             // NOTE(michiel): {-1: src1 < src2, 0: src1 = src2, 1: src1 > src2}
