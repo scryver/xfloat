@@ -1448,6 +1448,57 @@ xf_from_f64(u32 elemCount, f64 f, u32 *x)
 }
 
 internal void
+xf_from_u32(u32 elemCount, u32 u, u32 *x)
+{
+    i_expect(elemCount > XFLOAT_MANTISSA_IDX + 1);
+
+    xf_clear(elemCount, x);
+
+    if (u)
+    {
+        BitScanResult highBit = find_most_significant_set_bit(u);
+        i_expect(highBit.found); // NOTE(michiel): Otherwise the check on u shouldn't be succesful
+
+        s32 shiftCount = 31 - highBit.index;
+
+        xf_set_exponent(elemCount, x, XFLOAT_EXP_ONE + highBit.index);
+        x[XFLOAT_MANTISSA_IDX + 1] = u << shiftCount;
+    }
+}
+
+internal void
+xf_from_u64(u32 elemCount, u64 u, u32 *x)
+{
+    i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
+
+    xf_clear(elemCount, x);
+
+    u32 *src = (u32 *)&u;
+    if (src[1] == 0)
+    {
+        xf_from_u32(elemCount, src[0], x);
+    }
+    else
+    {
+        xf_set_exponent(elemCount, x, XFLOAT_EXP_ONE + 63);
+        x[XFLOAT_MANTISSA_IDX + 1] = src[1];
+        x[XFLOAT_MANTISSA_IDX + 2] = src[0];
+
+        s32 shiftCount;
+        xf_normalize_mantissa(elemCount, x, &shiftCount);
+        if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+        {
+            xf_clear(elemCount, x);
+        }
+        else
+        {
+            s64 exponent = (s64)xf_get_exponent(elemCount, x);
+            xf_set_exponent(elemCount, x, exponent - shiftCount);
+        }
+    }
+}
+
+internal void
 xf_from_s32(u32 elemCount, s32 s, u32 *x)
 {
     i_expect(elemCount > XFLOAT_MANTISSA_IDX + 1);
@@ -1462,7 +1513,7 @@ xf_from_s32(u32 elemCount, s32 s, u32 *x)
             s = -s; // NOTE(michiel): We account for overflow of the most negative number (this will stay the same)
         }
 
-        BitScanResult highBit = find_most_significant_set_bit(s);
+        BitScanResult highBit = find_most_significant_set_bit((u32)s);
         i_expect(highBit.found); // NOTE(michiel): Otherwise the check on s shouldn't be succesful
 
         s32 shiftCount = 31 - highBit.index;
@@ -1551,6 +1602,7 @@ f32_from_xf(u32 elemCount, u32 *x)
         mantissa = 0;
         exp = 0xFF;
     }
+    i_expect(mantissa == (mantissa & F32_FRAC_MASK));
 
     u32 result = (((sign << 31) & F32_SIGN_MASK) |
                   ((exp  << 23) & F32_EXP_MASK)  |
@@ -1568,9 +1620,21 @@ f64_from_xf(u32 elemCount, u32 *x)
     if ((exp > -1023) && (exp < 1025))
     {
         mantissa &= 0x7FFFFFFFFFFFFFFF; // NOTE(michiel): First bit is implied
-        exp += 1023;
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        mantissa = (mantissa >> 1) | (mantissa & 1);
+        exp += 1022;
     }
     else if (exp <= -1023)
+
     {
         if (exp > (-1023 - 52))
         {
@@ -1591,8 +1655,9 @@ f64_from_xf(u32 elemCount, u32 *x)
         mantissa = 0;
         exp = 0x7FF;
     }
+    i_expect(mantissa == (mantissa & F64_FRAC_MASK));
 
-    u64 result = (((sign << 63) & F64_SIGN_MASK) |
+    u64 result = ((sign & F64_SIGN_MASK) |
                   ((exp  << 52) & F64_EXP_MASK)  |
                   (mantissa & F64_FRAC_MASK));
     return *(f64 *)&result;
