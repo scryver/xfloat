@@ -1,8 +1,9 @@
 internal void
 xf_from_string(u32 elemCount, String string, u32 *x)
 {
-    u32 tempX[elemCount + 1];
-    u32 accum[elemCount + 1];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 tempX[XFLOAT_MAX_ELEM_COUNT + 1];
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
 
     b32 parseError = false;
 
@@ -274,6 +275,8 @@ xf_from_string(u32 elemCount, String string, u32 *x)
 internal String
 string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+
     String result = {0};
     if (xf_is_infinite(elemCount, x))
     {
@@ -285,9 +288,9 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
     }
     else
     {
-        u32 accum[elemCount + 1];
-        u32 xc[elemCount];
-        u32 xt[elemCount];
+        u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
+        u32 xc[XFLOAT_MAX_ELEM_COUNT];
+        u32 xt[XFLOAT_MAX_ELEM_COUNT];
 
         xf_copy(elemCount, x, xc);
         u32 sign = xf_get_sign(elemCount, xc);
@@ -441,7 +444,8 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
             }
         }
 
-        sprintf(ss, "E%d", exponent);
+        u32 offset = (u32)(ss - (char *)data);
+        string_fmt(maxDataCount - offset, data + offset, "E%d", exponent);
 
         result = string(string_length((char *)data), (char *)data);
     }
@@ -449,6 +453,7 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
     return result;
 }
 
+#if 0
 internal void
 xf_print(u32 elemCount, u32 *x, u32 digits)
 {
@@ -456,3 +461,4 @@ xf_print(u32 elemCount, u32 *x, u32 digits)
     String xStr = string_from_xf(elemCount, x, digits, array_count(stringBuf), stringBuf);
     fprintf(stdout, "%.*s", STR_FMT(xStr));
 }
+#endif

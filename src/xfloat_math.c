@@ -72,7 +72,8 @@ global u32 gXF_TruncateBitMask[] = {
 internal void
 xf_truncate(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 buf[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 buf[XFLOAT_MAX_ELEM_COUNT];
     xf_copy(elemCount, src, buf);
 
     u32 totalWords = (elemCount - (XFLOAT_MANTISSA_IDX + 1));
@@ -110,8 +111,9 @@ internal void
 xf_floor(u32 elemCount, u32 *src, u32 *dst)
 {
     i_expect(xf_get_exponent(elemCount, src) < XFLOAT_MAX_EXPONENT);
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
 
-    u32 buf[elemCount];
+    u32 buf[XFLOAT_MAX_ELEM_COUNT];
     xf_copy(elemCount, src, buf);
 
     if (xf_get_exponent(elemCount, buf))
@@ -173,7 +175,8 @@ xf_ceil(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_round(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 z[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 z[XFLOAT_MAX_ELEM_COUNT];
 
     xf_floor(elemCount, src, z);
     xf_sub(elemCount, src, z, dst);
@@ -203,6 +206,7 @@ xf_square_root(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_square_root_prec(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     if (xf_get_sign(elemCount, src))                           // X < 0
     {
         if (xf_compare(elemCount, gXF_Zero, src) == 0)         // X = -0
@@ -220,8 +224,8 @@ xf_square_root_prec(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
     {
         if (xf_get_exponent(elemCount, src))                   // X > 0
         {
-            u32 accum1[elemCount];
-            u32 accum2[elemCount];
+            u32 accum1[XFLOAT_MAX_ELEM_COUNT];
+            u32 accum2[XFLOAT_MAX_ELEM_COUNT];
 
             xf_copy(elemCount, src, accum1);                                       // A = X
             s32 exponent = (s32)xf_unbiased_exponent(elemCount, src);              // E = EXPONENT(X)
@@ -260,6 +264,7 @@ xf_square_root_prec(u32 elemCount, u32 *src, u32 *dst, u32 iterations /* = 8 */)
 internal void
 xf_log(u32 elemCount, u32 *src, u32 *dst)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     if (!xf_get_sign(elemCount, src))
     {
         if (xf_get_exponent(elemCount, src))
@@ -267,7 +272,7 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
             /* range reduction: log x = log( 2**ex * m ) = ex * log2 + log m */
             b32 foundAnswer = false;
 
-            u32 accumX[elemCount];
+            u32 accumX[XFLOAT_MAX_ELEM_COUNT];
 
             xf_copy(elemCount, src, accumX);
             s32 exponent = xf_get_exponent(elemCount, accumX);
@@ -283,8 +288,8 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
 
             if (!foundAnswer)
             {
-                u32 accumB[elemCount];
-                u32 accumT[elemCount];
+                u32 accumB[XFLOAT_MAX_ELEM_COUNT];
+                u32 accumT[XFLOAT_MAX_ELEM_COUNT];
 
                 exponent -= XFLOAT_EXP_BIAS;
                 xf_set_exponent(elemCount, accumX, XFLOAT_EXP_BIAS);          // X => RANGE (-1, 1)
@@ -307,8 +312,8 @@ xf_log(u32 elemCount, u32 *src, u32 *dst)
 
                 if (!foundAnswer)
                 {
-                    u32 accumZ[elemCount];
-                    u32 accumJ[elemCount];
+                    u32 accumZ[XFLOAT_MAX_ELEM_COUNT];
+                    u32 accumJ[XFLOAT_MAX_ELEM_COUNT];
 
                     xf_div(elemCount, accumX, accumB, dst);                   // Y = X / B      | (X - 1) / (X + 1)
 
@@ -402,6 +407,7 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
      * Then e^i = 2^i1 * 2^f1, so
      * e^x = 2^i1 * e^(f1 log 2) * e^f.
      */
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
 
     /* Catch overflow that might cause an endless recursion below.  */
     // TODO(michiel): Let the max exponent depend on XFLOAT_MAX_EXPONENT
@@ -409,9 +415,9 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
     {
         if (xf_get_exponent(elemCount, src))
         {
-            u32 numerator[elemCount];
-            u32 denominator[elemCount];
-            u32 accum[elemCount];
+            u32 numerator[XFLOAT_MAX_EXPONENT];
+            u32 denominator[XFLOAT_MAX_EXPONENT];
+            u32 accum[XFLOAT_MAX_EXPONENT];
 
             xf_copy(elemCount, src, accum);                                 // A = X
             xf_div(elemCount, accum, gXF_Log2, denominator);                // D = A / LOG(2)   | X / LOG(2)
@@ -485,7 +491,8 @@ internal void
 xf_pow(u32 elemCount, u32 *base, u32 *power, u32 *dst)
 {
     // NOTE(michiel): Y = B ^ P
-    u32 accum[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum[XFLOAT_MAX_ELEM_COUNT];
 
     b32 done = false;
     xf_floor(elemCount, power, accum);                         // A = FLOOR(P)
@@ -514,7 +521,8 @@ xf_pow(u32 elemCount, u32 *base, u32 *power, u32 *dst)
 internal void
 xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst)
 {
-    u32 accum[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum[XFLOAT_MAX_ELEM_COUNT];
 
     s64 li = xf_integer_fraction(elemCount, intPower, accum);
     xf_copy(elemCount, base, accum);
@@ -639,10 +647,11 @@ xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst)
 internal void
 xf_sin(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accum1[elemCount];
-    u32 accum2[elemCount];
-    u32 accum3[elemCount];
-    u32 accum4[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum1[XFLOAT_MAX_ELEM_COUNT];
+    u32 accum2[XFLOAT_MAX_ELEM_COUNT];
+    u32 accum3[XFLOAT_MAX_ELEM_COUNT];
+    u32 accum4[XFLOAT_MAX_ELEM_COUNT];
 
     u32 sign = xf_get_sign(elemCount, src);                                            // sign = src < 0
 
@@ -718,33 +727,34 @@ xf_cos(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_tan(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumX3[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumX3[XFLOAT_MAX_ELEM_COUNT];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumX3);
     xf_make_positive(elemCount, accumX3);               // X3 = |X|
 
     // NOTE(michiel): Range reduction to +/- pi/2
-    u32 accumE[elemCount];
+    u32 accumE[XFLOAT_MAX_ELEM_COUNT];
     xf_add(elemCount, accumX3, gXF_PiOver2, accumE);    // E = X3 + PI/2    | |X| + PI/2
     xf_div(elemCount, accumE, gXF_Pi, accumE);          // E /= PI          | (|X| + PI/2) / PI
     xf_floor(elemCount, accumE, accumE);                // E = FLOOR(E)     | FLOOR((|X| + PI/2) / PI)
     xf_mul(elemCount, accumE, gXF_Pi, accumE);          // E *= PI          | FLOOR((|X| + PI/2) / PI) * PI
     xf_sub(elemCount, accumX3, accumE, accumX3);        // X3 -= E          | |X| - FLOOR((|X| + PI/2) / PI) * PI
 
-    u32 accumJ[elemCount];
+    u32 accumJ[XFLOAT_MAX_ELEM_COUNT];
     u32 n = XFLOAT_MAX_BITS(elemCount) / 8;
     s64 li = 2 * n + 1;
     xf_from_s64(elemCount, li, accumJ);                 // J = 2N + 1
     xf_copy(elemCount, accumJ, accumE);                 // E = J
 
     // NOTE(michiel): REDUCED(X) = |X| - FLOOR((|X| + PI/2) / PI) * PI
-    u32 accumX2[elemCount];
+    u32 accumX2[XFLOAT_MAX_ELEM_COUNT];
     xf_mul(elemCount, accumX3, accumX3, accumX2);       // X2 = X3*X3       | REDUCED(X)^2
     xf_negate(elemCount, accumX2);                      // X2 = -X2         | -(REDUCED(X)^2)
 
     // NOTE(michiel): Continued fraction expansion
     // -x^2/(-x^2/(-x^2/(... + 7) + 5) + 3) + 1
-    u32 accumR[elemCount];
+    u32 accumR[XFLOAT_MAX_ELEM_COUNT];
     for (u32 i = 0; i < n; ++i)
     {
         xf_div(elemCount, accumX2, accumE, accumR);     // R = X2 / E       | -(X^2) / (...)
@@ -771,14 +781,15 @@ xf_cot(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_asin(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumA[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumA[XFLOAT_MAX_ELEM_COUNT];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumA);
     xf_make_positive(elemCount, accumA);
 
     if (xf_compare(elemCount, accumA, gXF_One) <= 0)
     {
-        u32 accumZSqr[elemCount];
+        u32 accumZSqr[XFLOAT_MAX_ELEM_COUNT];
 
         u32 flag = 0;
         if (xf_compare(elemCount, accumA, gXF_Half) > 0)
@@ -835,12 +846,13 @@ xf_acos(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_atan(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumX[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumX[XFLOAT_MAX_ELEM_COUNT];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumX);
     xf_make_positive(elemCount, accumX);
 
-    u32 accumY[elemCount];
+    u32 accumY[XFLOAT_MAX_ELEM_COUNT];
     if (xf_compare(elemCount, accumX, gXF_Tan3PiOver8) > 0)
     {
         xf_copy(elemCount, gXF_PiOver2, accumY);
@@ -862,13 +874,13 @@ xf_atan(u32 elemCount, u32 *src, u32 *dst)
         xf_clear(elemCount, accumY);
     }
 
-    u32 accumZ[elemCount];
+    u32 accumZ[XFLOAT_MAX_ELEM_COUNT];
     xf_mul(elemCount, accumX, accumX, accumZ);
     if (xf_get_exponent(elemCount, accumZ))
     {
-        u32 accumA[elemCount];
-        u32 accumB[elemCount];
-        u32 accumJ[elemCount];
+        u32 accumA[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumB[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumJ[XFLOAT_MAX_ELEM_COUNT];
 
         u32 i = 2 * XFLOAT_MAX_BITS(elemCount) / 9;
         u32 j = 2 * i + 1;
@@ -951,7 +963,7 @@ xf_atan2(u32 elemCount, u32 *y, u32 *x, u32 *dst)
     }
     else
     {
-        u32 accumW[elemCount];
+        u32 accumW[XFLOAT_MAX_ELEM_COUNT];
 
         switch (quadrant)
         {
@@ -981,7 +993,8 @@ xf_atan2(u32 elemCount, u32 *y, u32 *x, u32 *dst)
 internal void
 xf_sinh(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumZ[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumZ[XFLOAT_MAX_ELEM_COUNT];
 
     u32 exponent = xf_get_exponent(elemCount, src);
     if (exponent <= 1)
@@ -991,11 +1004,11 @@ xf_sinh(u32 elemCount, u32 *src, u32 *dst)
     }
     else if (exponent < XFLOAT_EXP_BIAS)
     {
-        u32 srcSqr[elemCount];
+        u32 srcSqr[XFLOAT_MAX_ELEM_COUNT];
         xf_mul(elemCount, src, src, srcSqr);
 
-        u32 accumN[elemCount];
-        u32 accumF[elemCount];
+        u32 accumN[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumF[XFLOAT_MAX_ELEM_COUNT];
 
         xf_copy(elemCount, gXF_One, accumZ);
         xf_copy(elemCount, gXF_One, accumF);
@@ -1028,8 +1041,9 @@ internal void
 xf_cosh(u32 elemCount, u32 *src, u32 *dst)
 {
     // NOTE(michiel): cosh(x) = (e^x + 1 / e^x) / 2
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
 
-    u32 accum[elemCount];
+    u32 accum[XFLOAT_MAX_ELEM_COUNT];
 
     xf_exp(elemCount, src, accum);
     xf_div(elemCount, gXF_One, accum, dst);
@@ -1047,9 +1061,10 @@ xf_cosh(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_tanh(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumE[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumE[XFLOAT_MAX_ELEM_COUNT];
 
-    u32 accumR[elemCount];
+    u32 accumR[XFLOAT_MAX_ELEM_COUNT];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumR);
     xf_make_positive(elemCount, accumR);
@@ -1068,8 +1083,8 @@ xf_tanh(u32 elemCount, u32 *src, u32 *dst)
     }
     else
     {
-        u32 accumJ[elemCount];
-        u32 accumX[elemCount];
+        u32 accumJ[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumX[XFLOAT_MAX_ELEM_COUNT];
 
         /* Adjust loop count for convergence to working precision.  */
         u32 n = XFLOAT_MAX_BITS(elemCount) / 9 + 1;
@@ -1099,7 +1114,8 @@ xf_tanh(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_asinh(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumX[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumX[XFLOAT_MAX_ELEM_COUNT];
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumX);
     xf_make_positive(elemCount, accumX);
@@ -1127,11 +1143,11 @@ xf_asinh(u32 elemCount, u32 *src, u32 *dst)
     }
     else
     {
-        u32 accumZ[elemCount];
-        u32 accumA[elemCount];
-        u32 accumB[elemCount];
-        u32 accumS[elemCount];
-        u32 accumX2[elemCount];
+        u32 accumZ[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumA[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumB[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumS[XFLOAT_MAX_ELEM_COUNT];
+        u32 accumX2[XFLOAT_MAX_ELEM_COUNT];
 
         xf_mul(elemCount, accumX, accumX, accumZ);
         xf_add(elemCount, gXF_One, accumZ, accumA);
@@ -1171,6 +1187,7 @@ xf_asinh(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_acosh(u32 elemCount, u32 *src, u32 *dst)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     if (xf_compare(elemCount, src, gXF_One) < 0)
     {
         // NOTE(michiel): Domain error
@@ -1183,7 +1200,7 @@ xf_acosh(u32 elemCount, u32 *src, u32 *dst)
     }
     else
     {
-        u32 accum[elemCount];
+        u32 accum[XFLOAT_MAX_ELEM_COUNT];
         xf_mul(elemCount, src, src, accum);       // A = X^2
         xf_sub(elemCount, accum, gXF_One, accum); // A -= 1       | X^2 - 1
         xf_square_root(elemCount, accum, accum);       // A = SQRT(A)  | SQRT(X^2 - 1)
@@ -1195,8 +1212,9 @@ xf_acosh(u32 elemCount, u32 *src, u32 *dst)
 internal void
 xf_atanh(u32 elemCount, u32 *src, u32 *dst)
 {
-    u32 accumA[elemCount];
-    u32 accumB[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumA[XFLOAT_MAX_ELEM_COUNT];
+    u32 accumB[XFLOAT_MAX_ELEM_COUNT];
 
     u32 sign = xf_get_sign(elemCount, src);
     xf_copy(elemCount, src, accumA);

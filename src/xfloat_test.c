@@ -12,6 +12,18 @@
 #include "xfloat_math.c"
 #include "xfloat_custom.c"
 
+internal void
+xf_print_raw(u32 elemCount, u32 *x, b32 newLine /* = true */)
+{
+    for (u32 elemIdx = 0; elemIdx < elemCount; ++elemIdx)
+    {
+        fprintf(stdout, "%s%08X", elemIdx ? "" : "0x", x[elemIdx]);
+    }
+    if (newLine) {
+        fprintf(stdout, "\n");
+    }
+}
+
 internal f32
 map(f32 value, f32 fromMin, f32 fromMax, f32 toMin, f32 toMax)
 {

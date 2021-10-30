@@ -1,6 +1,10 @@
 // TODO(michiel): Add return code to void functions, with over/underflow flags.
 // This will allow for checks on calculations if you want them.
 
+#ifndef XFLOAT_MAX_ELEM_COUNT
+#define XFLOAT_MAX_ELEM_COUNT 64
+#endif
+
 #ifndef XFLOAT_STICKY_BIT
 #define XFLOAT_STICKY_BIT    0
 #endif
@@ -52,7 +56,7 @@ internal void   xf_from_f32(u32 elemCount, f32 f, u32 *x);
 internal void   xf_from_f64(u32 elemCount, f64 f, u32 *x);
 internal void   xf_from_s32(u32 elemCount, s32 s, u32 *x);
 internal void   xf_from_s64(u32 elemCount, s64 s, u32 *x);
-internal void   xf_print_raw(u32 elemCount, u32 *x, b32 newLine);
+//internal void   xf_print_raw(u32 elemCount, u32 *x, b32 newLine);
 // TODO(michiel): xf_from_u32/u64
 
 // NOTE(michiel): Use xfloat_string.cpp for these extra conversion functions (they need the constants file as well).

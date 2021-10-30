@@ -356,10 +356,11 @@ xf_compare_mantissa(u32 elemCount, u32 *x, u32 *y)
 internal void
 xf_muldiv_normalize(u32 elemCount, u32 *x)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     // NOTE(michiel): The expected elemCount for this function to round
     // properly, is your normal elemCount + 1 at least. For normal use cases,
     // you won't need this however.
-    u32 roundBit[elemCount];
+    u32 roundBit[XFLOAT_MAX_ELEM_COUNT];
     xf_clear(elemCount, roundBit);
     roundBit[elemCount - 2] = 1;
 
@@ -510,8 +511,9 @@ xf_square_precision(u32 elemCount, u32 precision, u32 *a, u32 *b)
 internal void
 xf_multiply_single(u32 elemCount, u32 *a, u32 *b)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     // NOTE(michiel): b *= a, where a has only 1 significand word
-    u32 accum[elemCount + 1];
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
     xf_clear(elemCount + 1, accum);
 
     accum[XFLOAT_SIGN_EXP_IDX] = b[XFLOAT_SIGN_EXP_IDX];
@@ -541,8 +543,9 @@ xf_multiply_single(u32 elemCount, u32 *a, u32 *b)
 internal void
 xf_multiply_mantissa(u32 elemCount, u32 *a, u32 *b)
 {
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     // NOTE(michiel): b *= a
-    u32 accum[elemCount + 2];
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 2];
     xf_clear(elemCount + 2, accum);
 
     accum[XFLOAT_SIGN_EXP_IDX] = b[XFLOAT_SIGN_EXP_IDX];
@@ -586,10 +589,11 @@ internal void
 xf_divide_mantissa(u32 elemCount, u32 *a, u32 *b)
 {
     i_expect(elemCount > (XFLOAT_MANTISSA_IDX + 2));
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     // NOTE(michiel): b /= a
-    u32 sqr[elemCount + 2];
-    u32 prod[elemCount + 2];
-    u32 quot[elemCount + 2];
+    u32 sqr[XFLOAT_MAX_ELEM_COUNT + 2];
+    u32 prod[XFLOAT_MAX_ELEM_COUNT + 2];
+    u32 quot[XFLOAT_MAX_ELEM_COUNT + 2];
 
     /* Test if denominator has only 32 bits of significance. */
     u32 *p = a + XFLOAT_MANTISSA_IDX + 2;
@@ -772,8 +776,9 @@ xf_normalize_mantissa(u32 elemCount, u32 *x, s32 *shiftCount)
 internal void
 xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
 {
-    u32 accumBuf1[elemCount + 1];
-    u32 accumBuf2[elemCount + 1];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accumBuf1[XFLOAT_MAX_ELEM_COUNT + 1];
+    u32 accumBuf2[XFLOAT_MAX_ELEM_COUNT + 1];
     u32 *accum1 = accumBuf1;
     u32 *accum2 = accumBuf2;
 
@@ -961,7 +966,8 @@ xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
 internal void
 xf_multiply_int(u32 elemCount, u32 *a, u32 *b, u32 *c)
 {
-    u32 accum[elemCount + 1];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
 
     if ((xf_get_exponent(elemCount, a) == 0) ||
         (xf_get_exponent(elemCount, b) == 0))
@@ -1077,6 +1083,7 @@ internal void
 xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 * src2
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
     i_expect(elemCount > XFLOAT_MANTISSA_IDX + 2);
     if ((xf_get_exponent(elemCount, src1) == 0) ||
         (xf_get_exponent(elemCount, src2) == 0))
@@ -1086,7 +1093,7 @@ xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
     else
     {
         s64 lt;
-        u32 accum[elemCount + 1];
+        u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
 
         b32 src1IsSingle = false;
         if (src1[XFLOAT_MANTISSA_IDX + 2] == 0)
@@ -1188,7 +1195,8 @@ internal void
 xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 {
     // NOTE(michiel): dst = src1 / src2
-    u32 accum[elemCount + 1];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
 
     if (xf_get_exponent(elemCount, src1) == 0)
     {
@@ -1245,7 +1253,8 @@ xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction)
     // TODO(michiel): Make the integer part use all 64 bits!
 
     // NOTE(michiel): Returns the integer and puts the fraction in to _fraction_.
-    u32 accum[elemCount + 1];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
     s64 result = 0;
 
     xf_copy_extend(elemCount, src, accum);
@@ -1294,7 +1303,8 @@ internal s32
 xf_compare(u32 elemCount, u32 *src1, u32 *src2)
 {
     // NOTE(michiel): { -1: src1 < q, 0: src1 == q, 1: src1 > q }
-    u32 r[elemCount];
+    i_expect(elemCount <= XFLOAT_MAX_ELEM_COUNT);
+    u32 r[XFLOAT_MAX_ELEM_COUNT];
     s32 result = 0;
 
     if ((xf_get_exponent(elemCount, src1) <= (u32)XFLOAT_MAX_BITS(elemCount)) &&
@@ -1663,6 +1673,7 @@ f64_from_xf(u32 elemCount, u32 *x)
     return *(f64 *)&result;
 }
 
+#if 0
 internal void
 xf_print_raw(u32 elemCount, u32 *x, b32 newLine /* = true */)
 {
@@ -1674,3 +1685,5 @@ xf_print_raw(u32 elemCount, u32 *x, b32 newLine /* = true */)
         fprintf(stdout, "\n");
     }
 }
+#endif
+
