@@ -447,9 +447,9 @@ xf_multiply_precision(u32 elemCount, u32 precision, u32 *a, u32 *b, u32 *c)
                 // TODO(michiel): Could remove this if statement and just always multiply
                 u64 lp = (u64)valP * (u64)valQ;
                 u64 u  = (u64)(*r) + (u32)lp;
-                *r = u;
+                *r = (u32)u;
                 u = (u64)(*(r - 1)) + (lp >> 32) + (u >> 32);
-                *(r - 1) = u;
+                *(r - 1) = (u32)u;
                 *(r - 2) += u >> 32;
             }
         }
@@ -496,9 +496,9 @@ xf_square_precision(u32 elemCount, u32 precision, u32 *a, u32 *b)
                 --p;
                 ++q;
                 u64 u = (u64)(*r) + (u32)lp;
-                *r = u;
+                *r = (u32)u;
                 u = (u64)(*(r - 1)) + (lp >> 32) + (u >> 32);
-                *(r - 1) = u;
+                *(r - 1) = (u32)u;
                 *(r - 2) += u >> 32;
             }
         }
@@ -529,9 +529,9 @@ xf_multiply_single(u32 elemCount, u32 *a, u32 *b)
         {
             u64 lp = (u64)valP * y;
             u64 la = (u64)(*r) + (u32)lp;
-            *r = la;
+            *r = (u32)la;
             la = (u64)(*(r - 1)) + (lp >> 32) + (la >> 32);
-            *(r - 1) = la;
+            *(r - 1) = (u32)la;
             *(r - 2) += la >> 32;
         }
         --r;
@@ -573,9 +573,9 @@ xf_multiply_mantissa(u32 elemCount, u32 *a, u32 *b)
             {
                 u64 lp = (u64)valP * (u64)valQ;
                 u64 la = (u64)(*r) + (u32)lp;
-                *r = la;
+                *r = (u32)la;
                 la = (u64)(*(r - 1)) + (lp >> 32) + (la >> 32);
-                *(r - 1) = la;
+                *(r - 1) = (u32)la;
                 *(r - 2) += la >> 32;
             }
         }
@@ -619,11 +619,11 @@ xf_divide_mantissa(u32 elemCount, u32 *a, u32 *b)
         u64 u = ((u64)prod[XFLOAT_MANTISSA_IDX + 1] << 32) | prod[XFLOAT_MANTISSA_IDX + 2];
         for (u32 idx = XFLOAT_MANTISSA_IDX + 1; idx < elemCount; ++idx)
         {
-            u32 qu = u / d;
+            u32 qu = (u32)(u / d);
             prod[idx] = qu;
             u = ((u - (u64)d * qu) << 32) | prod[idx + 2];
         }
-        prod[elemCount] = u / d;
+        prod[elemCount] = (u32)(u / d);
     }
     else
     {
@@ -631,7 +631,7 @@ xf_divide_mantissa(u32 elemCount, u32 *a, u32 *b)
         xf_clear(elemCount + 2, quot);
         xf_clear(elemCount + 2, prod);
         xf_clear(elemCount + 2, sqr);
-        quot[XFLOAT_MANTISSA_IDX + 1] = ((u64)0x4000000000000000ULL) / a[XFLOAT_MANTISSA_IDX + 1];
+        quot[XFLOAT_MANTISSA_IDX + 1] = (u32)(((u64)0x4000000000000000ULL) / a[XFLOAT_MANTISSA_IDX + 1]);
 
         u32 precision = 1;
         while (precision < (elemCount - XFLOAT_MANTISSA_IDX))
@@ -719,7 +719,7 @@ xf_normalize_mantissa(u32 elemCount, u32 *x, s32 *shiftCount)
                 xf_shift_up16(elemCount, x);
                 xf_shift_up16(elemCount, x);
                 count += 32;
-                if (count > XFLOAT_MAX_BITS(elemCount - 1))
+                if (count > (s32)XFLOAT_MAX_BITS(elemCount - 1))
                 {
                     result = 1;
                     break;
@@ -801,7 +801,7 @@ xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
         lt = -lt;
     }
 
-    s32 shiftCount = lt;
+    s32 shiftCount = (s32)lt;
 #if XFLOAT_STICKY_BIT
     s32 lost = 0;
 #endif
@@ -896,7 +896,7 @@ xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
             }
             else
             {
-                xf_set_exponent(elemCount, accum1, lt);
+                xf_set_exponent(elemCount, accum1, (u32)lt);
 
                 /* round off */
                 u32 i = accum1[elemCount];
@@ -940,7 +940,7 @@ xf_add_internal(u32 elemCount, u32 *a, u32 *b, u32 *c, b32 doSub)
                             }
                             else
                             {
-                                xf_set_exponent(elemCount, accum1, lt);
+                                xf_set_exponent(elemCount, accum1, (u32)lt);
                             }
                         }
                     }
@@ -986,7 +986,7 @@ xf_multiply_int(u32 elemCount, u32 *a, u32 *b, u32 *c)
         s64 lt = xf_unbiased_exponent(elemCount, accum) + xf_unbiased_exponent(elemCount, a);
         if (lt <= (s64)XFLOAT_MAX_EXPONENT)
         {
-            xf_set_exponent(elemCount, accum, lt);
+            xf_set_exponent(elemCount, accum, (u32)lt);
             accum[elemCount] = 0;
             s32 shiftCount;
             if (xf_normalize_mantissa(elemCount + 1, accum, &shiftCount))
@@ -1006,7 +1006,7 @@ xf_multiply_int(u32 elemCount, u32 *a, u32 *b, u32 *c)
                 }
                 else
                 {
-                    xf_set_exponent(elemCount, accum, lt);
+                    xf_set_exponent(elemCount, accum, (u32)lt);
                     xf_copy(elemCount, accum, c);
                 }
             }
@@ -1092,7 +1092,7 @@ xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
     }
     else
     {
-        s64 lt;
+        s64 lt = 0;
         u32 accum[XFLOAT_MAX_ELEM_COUNT + 1];
 
         b32 src1IsSingle = false;
@@ -1157,7 +1157,7 @@ xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
         }
         else
         {
-            xf_set_exponent(elemCount, accum, lt);
+            xf_set_exponent(elemCount, accum, (u32)lt);
             accum[elemCount] = 0;
             s32 shiftCount;
             if (xf_normalize_mantissa(elemCount + 1, accum, &shiftCount))
@@ -1177,7 +1177,7 @@ xf_mul(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
                 }
                 else
                 {
-                    xf_set_exponent(elemCount, accum, lt);
+                    xf_set_exponent(elemCount, accum, (u32)lt);
                     xf_copy(elemCount, accum, dst);
                 }
             }
@@ -1223,7 +1223,7 @@ xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
 
             /* calculate exponent */
             lt = lt + (s64)xf_get_exponent(elemCount, accum) - 4L - (s64)xf_get_exponent(elemCount, src2);
-            xf_set_exponent(elemCount, accum, lt);
+            xf_set_exponent(elemCount, accum, (u32)lt);
             accum[elemCount] = 0;
 
             s32 shiftCount;
@@ -1240,7 +1240,7 @@ xf_div(u32 elemCount, u32 *src1, u32 *src2, u32 *dst)
             }
             else
             {
-                xf_set_exponent(elemCount, accum, lt);
+                xf_set_exponent(elemCount, accum, (u32)lt);
                 xf_copy(elemCount, accum, dst);
             }
         }
@@ -1258,7 +1258,7 @@ xf_integer_fraction(u32 elemCount, u32 *src, u32 *fraction)
     s64 result = 0;
 
     xf_copy_extend(elemCount, src, accum);
-    s32 shiftCount = xf_unbiased_exponent(elemCount, accum);
+    s32 shiftCount = (s32)xf_unbiased_exponent(elemCount, accum);
 
     if (shiftCount <= 0)
     {
@@ -1399,14 +1399,14 @@ xf_from_f32(u32 elemCount, f32 f, u32 *x)
         {
             s32 shiftCount;
             xf_normalize_mantissa(elemCount, x, &shiftCount);
-            if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+            if (shiftCount > (s32)XFLOAT_MAX_BITS(elemCount))
             {
                 xf_clear(elemCount, x);
             }
             else
             {
-                s64 exponent = (s64)xf_get_exponent(elemCount, x);
-                xf_set_exponent(elemCount, x, exponent - (shiftCount - 1));
+                s64 exponent64 = (s64)xf_get_exponent(elemCount, x);
+                xf_set_exponent(elemCount, x, (u32)(exponent64 - (shiftCount - 1)));
             }
         }
     }
@@ -1444,14 +1444,14 @@ xf_from_f64(u32 elemCount, f64 f, u32 *x)
         {
             s32 shiftCount;
             xf_normalize_mantissa(elemCount, x, &shiftCount);
-            if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+            if (shiftCount > (s32)XFLOAT_MAX_BITS(elemCount))
             {
                 xf_clear(elemCount, x);
             }
             else
             {
-                s64 exponent = (s64)xf_get_exponent(elemCount, x);
-                xf_set_exponent(elemCount, x, exponent - shiftCount);
+                s64 exponent64 = (s64)xf_get_exponent(elemCount, x);
+                xf_set_exponent(elemCount, x, (u32)(exponent64 - shiftCount));
             }
         }
     }
@@ -1496,14 +1496,14 @@ xf_from_u64(u32 elemCount, u64 u, u32 *x)
 
         s32 shiftCount;
         xf_normalize_mantissa(elemCount, x, &shiftCount);
-        if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+        if (shiftCount > (s32)XFLOAT_MAX_BITS(elemCount))
         {
             xf_clear(elemCount, x);
         }
         else
         {
             s64 exponent = (s64)xf_get_exponent(elemCount, x);
-            xf_set_exponent(elemCount, x, exponent - shiftCount);
+            xf_set_exponent(elemCount, x, (u32)(exponent - shiftCount));
         }
     }
 }
@@ -1560,14 +1560,14 @@ xf_from_s64(u32 elemCount, s64 s, u32 *x)
 
         s32 shiftCount;
         xf_normalize_mantissa(elemCount, x, &shiftCount);
-        if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+        if (shiftCount > (s32)XFLOAT_MAX_BITS(elemCount))
         {
             xf_clear(elemCount, x);
         }
         else
         {
             s64 exponent = (s64)xf_get_exponent(elemCount, x);
-            xf_set_exponent(elemCount, x, exponent - shiftCount);
+            xf_set_exponent(elemCount, x, (u32)(exponent - shiftCount));
         }
     }
 }
@@ -1576,7 +1576,7 @@ internal f32
 f32_from_xf(u32 elemCount, u32 *x)
 {
     u32 sign = xf_get_sign(elemCount, x);
-    s32 exp = xf_unbiased_exponent(elemCount, x);
+    s32 exp = (s32)xf_unbiased_exponent(elemCount, x);
     u32 mantissa = x[XFLOAT_MANTISSA_IDX + 1];
     if ((exp > -127) && (exp < 128))
     {

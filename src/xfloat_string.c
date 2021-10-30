@@ -55,11 +55,11 @@ xf_from_string(u32 elemCount, String string, u32 *x)
     {
         u32 k = parse_half_hex_byte(string.data[0]);
 
-        if (k < base)
+        if (k < (u32)base)
         {
             if ((precision != 0) || decimalPoint || (string.data[0] != '0'))
             {
-                if (precision < XFLOAT_MAX_DEC(elemCount))
+                if (precision < (s32)XFLOAT_MAX_DEC(elemCount))
                 {
                     /* count digits after decimal point (if decimalPoint is set) */
                     numberExponent += decimalPoint;
@@ -174,7 +174,7 @@ xf_from_string(u32 elemCount, String string, u32 *x)
         {
             /* Base 16 hexadecimal floating constant.  */
             xf_normalize_mantissa(elemCount, tempX, &shiftCount);
-            if (shiftCount > XFLOAT_MAX_BITS(elemCount))
+            if (shiftCount > (s32)XFLOAT_MAX_BITS(elemCount))
             {
                 doneFlags |= XFloatCompletion_Underflow;
             }
@@ -420,7 +420,7 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
                     --s;
                     k = *s & 0x7F;
                     k += 1;
-                    *s = k;
+                    *s = (char)k;
                     if (k > '9')
                     {
                         *s = '1';
@@ -431,7 +431,7 @@ string_from_xf(u32 elemCount, u32 *x, u32 digits, u32 maxDataCount, u8 *data)
                 else
                 {
                     k += 1;
-                    *s = k;
+                    *s = (char)k;
                     if (k > '9')
                     {
                         *s = '0';

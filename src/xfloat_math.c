@@ -448,7 +448,7 @@ xf_exp(u32 elemCount, u32 *src, u32 *dst)
             }
             else
             {
-                xf_set_exponent(elemCount, dst, i);
+                xf_set_exponent(elemCount, dst, (u32)i);
             }
         }
         else
@@ -552,7 +552,7 @@ xf_powi(u32 elemCount, u32 *base, u32 *intPower, u32 *dst)
             }
             else
             {
-                xf_set_exponent(elemCount, dst, e);
+                xf_set_exponent(elemCount, dst, (u32)e);
             }
         }
         else
